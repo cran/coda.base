@@ -1,4 +1,4 @@
-d3e5659120ddf20c71f93a9c92866043 *DESCRIPTION
+7eae5328297ab7d158256dacb7edfd74 *DESCRIPTION
 d5085f7b9711a3ae102b5c367b75c2cb *NAMESPACE
 91bd76ceb9dd63b9ed65fec90790222e *R/RcppExports.R
 18926aa791fac093d565e505856ad8d2 *R/coda.base.R
@@ -13,5 +13,5 @@ e794c4ba3f33917abf6e4ea2ae902c4f *man/ilr_basis.Rd
 4739060661d7c7bab685356b72f5e801 *src/Makevars
 68cb9fe0725cd464a6a70bc911442985 *src/Makevars.win
 d41084cb80e3003907e084b6d84d7056 *src/RcppExports.cpp
-d31078aafa5c3bc6903467c4cfc385bc *src/coda.cpp
+4bfb7e909fca9ebb3ede799d9ba78325 *src/coda.cpp
 0e0cd45a96b3e8ecf7a0ee8743f41342 *src/coda.h
