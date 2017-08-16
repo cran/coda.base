@@ -2,13 +2,33 @@
 
 #include <RcppArmadillo.h>
 #include "coda.h"
-#include <random>
-
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later)
-// [[Rcpp::plugins(cpp11)]]
 
 using namespace Rcpp;
 
+// [[Rcpp::export]]
+arma::mat c_variation_array(arma::mat X, bool only_variation = false){
+  unsigned int K = X.n_cols;
+  arma::mat lX = log(X);
+  arma::mat varray = arma::mat(K,K);
+  varray.diag().zeros();
+  arma::mat Xcov = cov(lX);
+  if(!only_variation){
+    arma::mat Xmeans = arma::mean(lX, 0);
+    for(unsigned i = 0; i < K; i++){
+      for(unsigned j = 0; j < i; j++){
+        varray(i,j) = Xmeans(j) - Xmeans(i);
+        varray(j,i) = Xcov(i,i) + Xcov(j,j) - 2*Xcov(i,j);
+      }
+    }
+  }else{
+    for(unsigned i = 0; i < K; i++){
+      for(unsigned j = 0; j < i; j++){
+        varray(i,j) = varray(j,i) = Xcov(i,i) + Xcov(j,j) - 2*Xcov(i,j);
+      }
+    }
+  }
+  return varray;
+}
 
 // [[Rcpp::export]]
 arma::mat alr_basis_default(unsigned int dim){
@@ -114,7 +134,7 @@ arma::mat inv_clr_coordinates(arma::mat clrX){
 arma::mat coordinates_alr2(arma::mat X, int denominator){
   arma::mat logX = log(X);
   arma::mat res = logX(arma::span::all, arma::span(0,X.n_cols-2));
-  for(int i = 0; i < res.n_cols; i++){
+  for(unsigned int i = 0; i < res.n_cols; i++){
     res(arma::span::all, i) -= logX(arma::span::all,X.n_cols-1);
   }
   return(res);
@@ -125,8 +145,8 @@ arma::mat coordinates_alr(arma::mat X, int denominator){
   arma::mat logX = log(X);
   arma::mat res(logX.n_rows, logX.n_cols-1);
   int idenom = logX.n_cols-1;
-  for(int j = 0; j < res.n_cols; j++){
-    for(int i = 0; i< res.n_rows; i++){
+  for(unsigned int j = 0; j < res.n_cols; j++){
+    for(unsigned int i = 0; i< res.n_rows; i++){
       res(i,j) = logX(i,j) - logX(i,idenom);
     }
   }

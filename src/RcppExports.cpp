@@ -6,6 +6,18 @@
 
 using namespace Rcpp;
 
+// c_variation_array
+arma::mat c_variation_array(arma::mat X, bool only_variation);
+RcppExport SEXP _coda_base_c_variation_array(SEXP XSEXP, SEXP only_variationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< bool >::type only_variation(only_variationSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_variation_array(X, only_variation));
+    return rcpp_result_gen;
+END_RCPP
+}
 // alr_basis_default
 arma::mat alr_basis_default(unsigned int dim);
 RcppExport SEXP _coda_base_alr_basis_default(SEXP dimSEXP) {
@@ -142,8 +154,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// find_PB
+arma::mat find_PB(arma::mat M, int rep);
+RcppExport SEXP _coda_base_find_PB(SEXP MSEXP, SEXP repSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type rep(repSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB(M, rep));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_coda_base_c_variation_array", (DL_FUNC) &_coda_base_c_variation_array, 2},
     {"_coda_base_alr_basis_default", (DL_FUNC) &_coda_base_alr_basis_default, 1},
     {"_coda_base_clr_basis_default", (DL_FUNC) &_coda_base_clr_basis_default, 1},
     {"_coda_base_ilr_basis_default", (DL_FUNC) &_coda_base_ilr_basis_default, 1},
@@ -156,6 +181,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_coda_base_coordinates_basis", (DL_FUNC) &_coda_base_coordinates_basis, 3},
     {"_coda_base_ilr_coordinates", (DL_FUNC) &_coda_base_ilr_coordinates, 1},
     {"_coda_base_inv_ilr_coordinates", (DL_FUNC) &_coda_base_inv_ilr_coordinates, 1},
+    {"_coda_base_find_PB", (DL_FUNC) &_coda_base_find_PB, 2},
     {NULL, NULL, 0}
 };
 
