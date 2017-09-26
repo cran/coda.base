@@ -2,19 +2,29 @@
 % Please edit documentation in R/coordinates.R
 \name{clr_basis}
 \alias{clr_basis}
-\title{Build a centered log-ratio basis}
+\title{Centered log-ratio basis}
 \usage{
 clr_basis(dim)
 }
 \arguments{
-\item{dim}{number of components}
+\item{dim}{number of parts}
 }
 \value{
 matrix
 }
 \description{
-Build a centered log-ratio basis
+Compute the transformation matrix to express a composition using
+the linearly dependant centered log-ratio coordinates.
 }
 \examples{
-clr_basis(5)
+(B <- clr_basis(5))
+# CLR coordinates are linearly dependant coordinates.
+(clr_coordinates <- coordinates(c(1,2,3,4,5), B))
+# The sum of all coordinates equal to zero
+sum(clr_coordinates) < 1e-15
+}
+\references{
+Aitchison, J. (1986)
+\emph{The Statistical Analysis of Compositional Data}.
+Monographs on Statistics and Applied Probability. Chapman & Hall Ltd., London (UK). 416p.
 }

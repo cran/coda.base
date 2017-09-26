@@ -154,15 +154,88 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// find_PB
-arma::mat find_PB(arma::mat M, int rep);
-RcppExport SEXP _coda_base_find_PB(SEXP MSEXP, SEXP repSEXP) {
+// find_PB_rnd_local_search
+arma::mat find_PB_rnd_local_search(arma::mat M, int rep);
+RcppExport SEXP _coda_base_find_PB_rnd_local_search(SEXP MSEXP, SEXP repSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type rep(repSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_PB(M, rep));
+    rcpp_result_gen = Rcpp::wrap(find_PB_rnd_local_search(M, rep));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_PB_pc_local_search
+arma::mat find_PB_pc_local_search(arma::mat X);
+RcppExport SEXP _coda_base_find_PB_pc_local_search(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB_pc_local_search(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_PB2
+arma::mat find_PB2(arma::mat M, int random, int optim);
+RcppExport SEXP _coda_base_find_PB2(SEXP MSEXP, SEXP randomSEXP, SEXP optimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type random(randomSEXP);
+    Rcpp::traits::input_parameter< int >::type optim(optimSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB2(M, random, optim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_PB3
+arma::mat find_PB3(arma::mat M, int steps, int random, int optim, int k);
+RcppExport SEXP _coda_base_find_PB3(SEXP MSEXP, SEXP stepsSEXP, SEXP randomSEXP, SEXP optimSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type steps(stepsSEXP);
+    Rcpp::traits::input_parameter< int >::type random(randomSEXP);
+    Rcpp::traits::input_parameter< int >::type optim(optimSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB3(M, steps, random, optim, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_PB4
+arma::mat find_PB4(arma::mat M);
+RcppExport SEXP _coda_base_find_PB4(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB4(M));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_PB5
+arma::mat find_PB5(arma::mat X);
+RcppExport SEXP _coda_base_find_PB5(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB5(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// arma_sampling_without_replacement
+arma::uvec arma_sampling_without_replacement(int n, int k);
+RcppExport SEXP _coda_base_arma_sampling_without_replacement(SEXP nSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(arma_sampling_without_replacement(n, k));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -181,7 +254,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_coda_base_coordinates_basis", (DL_FUNC) &_coda_base_coordinates_basis, 3},
     {"_coda_base_ilr_coordinates", (DL_FUNC) &_coda_base_ilr_coordinates, 1},
     {"_coda_base_inv_ilr_coordinates", (DL_FUNC) &_coda_base_inv_ilr_coordinates, 1},
-    {"_coda_base_find_PB", (DL_FUNC) &_coda_base_find_PB, 2},
+    {"_coda_base_find_PB_rnd_local_search", (DL_FUNC) &_coda_base_find_PB_rnd_local_search, 2},
+    {"_coda_base_find_PB_pc_local_search", (DL_FUNC) &_coda_base_find_PB_pc_local_search, 1},
+    {"_coda_base_find_PB2", (DL_FUNC) &_coda_base_find_PB2, 3},
+    {"_coda_base_find_PB3", (DL_FUNC) &_coda_base_find_PB3, 5},
+    {"_coda_base_find_PB4", (DL_FUNC) &_coda_base_find_PB4, 1},
+    {"_coda_base_find_PB5", (DL_FUNC) &_coda_base_find_PB5, 1},
+    {"_coda_base_arma_sampling_without_replacement", (DL_FUNC) &_coda_base_arma_sampling_without_replacement, 2},
     {NULL, NULL, 0}
 };
 

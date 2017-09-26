@@ -2,8 +2,9 @@
 % Please edit documentation in R/coordinates.R
 \name{sbp_basis}
 \alias{sbp_basis}
-\title{Build an \code{\link{ilr_basis}} using a sequential binary partition or
-or a generic coordinate system based on balances.}
+\title{Isometric log-ratio basis based on Balances
+Build an \code{\link{ilr_basis}} using a sequential binary partition or
+a generic coordinate system based on balances.}
 \usage{
 sbp_basis(..., data, silent = F)
 }
@@ -18,8 +19,9 @@ sbp_basis(..., data, silent = F)
 matrix
 }
 \description{
+Isometric log-ratio basis based on Balances
 Build an \code{\link{ilr_basis}} using a sequential binary partition or
-or a generic coordinate system based on balances.
+a generic coordinate system based on balances.
 }
 \examples{
 X = data.frame(a=1:2, b=2:3, c=4:5, d=5:6, e=10:11, f=100:101, g=1:2)

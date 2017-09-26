@@ -53,7 +53,31 @@ inv_ilr_coordinates <- function(ilrX) {
     .Call('_coda_base_inv_ilr_coordinates', PACKAGE = 'coda.base', ilrX)
 }
 
-find_PB <- function(M, rep = 1L) {
-    .Call('_coda_base_find_PB', PACKAGE = 'coda.base', M, rep)
+find_PB_rnd_local_search <- function(M, rep = 1L) {
+    .Call('_coda_base_find_PB_rnd_local_search', PACKAGE = 'coda.base', M, rep)
+}
+
+find_PB_pc_local_search <- function(X) {
+    .Call('_coda_base_find_PB_pc_local_search', PACKAGE = 'coda.base', X)
+}
+
+find_PB2 <- function(M, random = 100L, optim = 0L) {
+    .Call('_coda_base_find_PB2', PACKAGE = 'coda.base', M, random, optim)
+}
+
+find_PB3 <- function(M, steps, random = 100L, optim = 0L, k = 0L) {
+    .Call('_coda_base_find_PB3', PACKAGE = 'coda.base', M, steps, random, optim, k)
+}
+
+find_PB4 <- function(M) {
+    .Call('_coda_base_find_PB4', PACKAGE = 'coda.base', M)
+}
+
+find_PB5 <- function(X) {
+    .Call('_coda_base_find_PB5', PACKAGE = 'coda.base', X)
+}
+
+arma_sampling_without_replacement <- function(n, k) {
+    .Call('_coda_base_arma_sampling_without_replacement', PACKAGE = 'coda.base', n, k)
 }
 

@@ -2,9 +2,9 @@
 % Please edit documentation in R/coordinates.R
 \name{pb_basis}
 \alias{pb_basis}
-\title{Compute a basis for considering Principal Balances.}
+\title{Isometric log-ratio basis based on Principal Balances.}
 \usage{
-pb_basis(X, method, rep = ceiling(ncol(X)/2), ...)
+pb_basis(X, method, rep = 0, ordering = TRUE, ...)
 }
 \arguments{
 \item{X}{compositional dataset}
@@ -12,7 +12,12 @@ pb_basis(X, method, rep = ceiling(ncol(X)/2), ...)
 \item{method}{method to be used with Principal Balances. Methods available are: 'lsearch' or
 method to be passed to hclust function (for example `ward.D` or `ward.D2` to use Ward method).}
 
-\item{rep}{Number of restartings to be used with the local search algorithm.}
+\item{rep}{Number of restartings to be used with the local search algorithm. If zero is supplied
+(default), one local search is performed using an starting point close to the principal component
+solution.}
+
+\item{ordering}{should the principal balances found be returned ordered? (first column, first
+principal balance and so on)}
 
 \item{...}{parameters passed to hclust function}
 }
@@ -20,16 +25,23 @@ method to be passed to hclust function (for example `ward.D` or `ward.D2` to use
 matrix
 }
 \description{
-Compute a basis for considering Principal Balances.
+Different approximations to approximate the principal balances of a compositional dataset.
 }
 \examples{
-X = matrix(exp(rnorm(10*100)), nrow=100, ncol=10)
+X = matrix(exp(rnorm(20*100)), nrow=100, ncol=20)
 # Optimal variance obtained with Principal components
-apply(coordinates(X, 'pc'), 2, var)
-# Solution obtained using local search
-apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var)
+head(apply(coordinates(X, 'pc'), 2, var))
+# Solution obtained using a hill climbing algorithm from pc approximation
+head(apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var))
+# Solution obtained using a hill climbing algorithm using 10 restartings
+head(apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var))
 # Solution obtained using Ward method
-apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var)
+head(apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
 # Solution obtained using Old Ward function (in R versions <= 3.0.3)
-apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
+head(apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var))
+}
+\references{
+Pawlowsky-Glahn, V., Egozcue, J.J., Tolosana-Delgado R. (2011).
+\emph{Principal balances}.
+in proceeding of the 4th International Workshop on Compositional Data Analysis (CODAWORK'11) (available online at \url{http://www-ma3.upc.edu/users/ortego/codawork11-Proceedings/Admin/Files/FilePaper/p55.pdf})
 }

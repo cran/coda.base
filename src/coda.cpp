@@ -1,7 +1,9 @@
+#define ARMA_NO_DEBUG
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include <RcppArmadillo.h>
-#include "coda.h"
+#include <coda.h>
 
 using namespace Rcpp;
 

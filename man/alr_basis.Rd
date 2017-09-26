@@ -2,23 +2,34 @@
 % Please edit documentation in R/coordinates.R
 \name{alr_basis}
 \alias{alr_basis}
-\title{Build an additive log-ratio basis}
+\title{Additive log-ratio basis}
 \usage{
 alr_basis(dim, denominator = dim, numerator = which(denominator != 1:dim))
 }
 \arguments{
-\item{dim}{number of components}
+\item{dim}{number of parts}
 
-\item{denominator}{part used as denominator}
+\item{denominator}{part used as denominator (default behaviour is to use last part)}
 
-\item{numerator}{parts to be used as numerator. By default all except the denominator following same order.}
+\item{numerator}{parts to be used as numerator. By default all except the denominator parts are chosen following original order.}
 }
 \value{
 matrix
 }
 \description{
-Build an additive log-ratio basis
+Compute the transformation matrix to express a composition using the oblique additive log-ratio
+coordinates.
 }
 \examples{
 alr_basis(5)
+# Third part is used as denominator
+alr_basis(5, 3)
+# Third part is used as denominator, and
+# other parts are rearranged
+alr_basis(5, 3, c(1,5,2,4))
+}
+\references{
+Aitchison, J. (1986)
+\emph{The Statistical Analysis of Compositional Data}.
+Monographs on Statistics and Applied Probability. Chapman & Hall Ltd., London (UK). 416p.
 }

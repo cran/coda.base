@@ -16,10 +16,19 @@ variation_array = function(X, only_variation = FALSE){
   c_variation_array(X, as.logical(only_variation))
 }
 
-#' Build an isometric log-ratio basis
+#' Default Isometric log-ratio basis
+#'
+#' Build an isometric log-ratio basis for a composition with k+1 parts
+#' \deqn{h_i = \sqrt{\frac{i}{i+1}} \log\frac{\sqrt[i]{\prod_{j=1}^i x_j}}{x_{i+1}}}{%
+#' h[i] = \sqrt(i/(i+1)) ( log(x[1] \ldots x[i])/i - log(x[i+1]) )}
+#' for \eqn{i in 1\ldots k}
 #'
 #' @param dim number of components
 #' @return matrix
+#' @references
+#' Egozcue, J.J., Pawlowsky-Glahn, V., Mateu-Figueras, G. and Barceló-Vidal C. (2003).
+#' \emph{Isometric logratio transformations for compositional data analysis}.
+#' Mathematical Geology, \strong{35}(3) 279-300
 #' @examples
 #' ilr_basis(5)
 #' @export
@@ -27,14 +36,26 @@ ilr_basis = function(dim){
   ilr_basis_default(dim)
 }
 
-#' Build an additive log-ratio basis
+#' Additive log-ratio basis
 #'
-#' @param dim number of components
-#' @param denominator part used as denominator
-#' @param numerator parts to be used as numerator. By default all except the denominator following same order.
+#' Compute the transformation matrix to express a composition using the oblique additive log-ratio
+#' coordinates.
+#'
+#' @param dim number of parts
+#' @param denominator part used as denominator (default behaviour is to use last part)
+#' @param numerator parts to be used as numerator. By default all except the denominator parts are chosen following original order.
 #' @return matrix
 #' @examples
 #' alr_basis(5)
+#' # Third part is used as denominator
+#' alr_basis(5, 3)
+#' # Third part is used as denominator, and
+#' # other parts are rearranged
+#' alr_basis(5, 3, c(1,5,2,4))
+#' @references
+#' Aitchison, J. (1986)
+#' \emph{The Statistical Analysis of Compositional Data}.
+#' Monographs on Statistics and Applied Probability. Chapman & Hall Ltd., London (UK). 416p.
 #' @export
 alr_basis = function(dim, denominator = dim, numerator = which(denominator != 1:dim)){
   res = alr_basis_default(dim)
@@ -46,12 +67,23 @@ alr_basis = function(dim, denominator = dim, numerator = which(denominator != 1:
   res[,numerator]
 }
 
-#' Build a centered log-ratio basis
+#' Centered log-ratio basis
 #'
-#' @param dim number of components
+#' Compute the transformation matrix to express a composition using
+#' the linearly dependant centered log-ratio coordinates.
+#'
+#' @param dim number of parts
 #' @return matrix
+#' @references
+#' Aitchison, J. (1986)
+#' \emph{The Statistical Analysis of Compositional Data}.
+#' Monographs on Statistics and Applied Probability. Chapman & Hall Ltd., London (UK). 416p.
 #' @examples
-#' clr_basis(5)
+#' (B <- clr_basis(5))
+#' # CLR coordinates are linearly dependant coordinates.
+#' (clr_coordinates <- coordinates(c(1,2,3,4,5), B))
+#' # The sum of all coordinates equal to zero
+#' sum(clr_coordinates) < 1e-15
 #' @export
 clr_basis = function(dim){
   clr_basis_default(dim)
@@ -64,8 +96,9 @@ clr_basis = function(dim){
 #   pr$loadings[,-NCOL(X)]
 # }
 
+#' Isometric log-ratio basis based on Balances
 #' Build an \code{\link{ilr_basis}} using a sequential binary partition or
-#' or a generic coordinate system based on balances.
+#' a generic coordinate system based on balances.
 #'
 #' @param ... balances to consider
 #' @param data composition from where name parts are extracted
@@ -168,29 +201,46 @@ sbp_basis = function(..., data, silent=F){
   RES
 }
 
-#' Compute a basis for considering Principal Balances.
+#' Isometric log-ratio basis based on Principal Balances.
+#'
+#' Different approximations to approximate the principal balances of a compositional dataset.
 #'
 #' @param X compositional dataset
 #' @param method method to be used with Principal Balances. Methods available are: 'lsearch' or
 #' method to be passed to hclust function (for example `ward.D` or `ward.D2` to use Ward method).
-#' @param rep Number of restartings to be used with the local search algorithm.
+#' @param rep Number of restartings to be used with the local search algorithm. If zero is supplied
+#' (default), one local search is performed using an starting point close to the principal component
+#' solution.
+#' @param ordering should the principal balances found be returned ordered? (first column, first
+#' principal balance and so on)
 #' @param ... parameters passed to hclust function
 #' @return matrix
+#' @references
+#' Pawlowsky-Glahn, V., Egozcue, J.J., Tolosana-Delgado R. (2011).
+#' \emph{Principal balances}.
+#' in proceeding of the 4th International Workshop on Compositional Data Analysis (CODAWORK'11) (available online at \url{http://www-ma3.upc.edu/users/ortego/codawork11-Proceedings/Admin/Files/FilePaper/p55.pdf})
 #' @examples
-#' X = matrix(exp(rnorm(10*100)), nrow=100, ncol=10)
+#' X = matrix(exp(rnorm(20*100)), nrow=100, ncol=20)
 #' # Optimal variance obtained with Principal components
-#' apply(coordinates(X, 'pc'), 2, var)
-#' # Solution obtained using local search
-#' apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var)
+#' head(apply(coordinates(X, 'pc'), 2, var))
+#'# Solution obtained using a hill climbing algorithm from pc approximation
+#'head(apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var))
+#'# Solution obtained using a hill climbing algorithm using 10 restartings
+#'head(apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var))
 #' # Solution obtained using Ward method
-#' apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var)
+#' head(apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
 #' # Solution obtained using Old Ward function (in R versions <= 3.0.3)
-#' apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
+#' head(apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var))
 #' @export
-pb_basis = function(X, method, rep = ceiling(ncol(X)/2), ...){
+pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
   X = as.matrix(X)
   if(method == 'lsearch'){
-    find_PB(stats::cov(log(X)), rep=rep)
+    if(rep == 0){
+      B = find_PB_pc_local_search(X)
+    }else{
+      B = find_PB_rnd_local_search(stats::cov(log(X)), rep=rep)
+    }
+
   }else{
     hh = stats::hclust(stats::as.dist(variation_array(X, only_variation = TRUE)), method=method, ...)
     bin = hh$merge
@@ -202,8 +252,12 @@ pb_basis = function(X, method, rep = ceiling(ncol(X)/2), ...){
     id = seq_along(sbp)
     sbp.exp = paste(sprintf("%s = %s ~ %s", paste0('P', id), nms[,1], nms[,2]),
                     collapse=', ')
-    eval(parse(text = sprintf("sbp_basis(%s,data=df)", sbp.exp)))[,rev(id)]
+    B = eval(parse(text = sprintf("sbp_basis(%s,data=df)", sbp.exp)))[,rev(id)]
   }
+  if(ordering){
+    B = B[,order(apply(coordinates(X, B), 2, stats::var), decreasing = TRUE)]
+  }
+  B
 }
 
 #' coordinates with respect an specific basis
@@ -225,13 +279,16 @@ pb_basis = function(X, method, rep = ceiling(ncol(X)/2), ...){
 #' a compositions from given coordinates.
 #' @examples
 #' coordinates(c(1,2,3,4,5))
+#' # basis is shown if 'coda.base.basis' option is set to TRUE
+#' options('coda.base.basis' = TRUE)
+#' coordinates(c(1,2,3,4,5))
 #' # Setting sparse_basi to TRUE can improve performance if log-ratio basis is sparse.
 #' N = 100
 #' K = 1000
 #' X = matrix(exp(rnorm(N*K)), nrow=N, ncol=K)
 #' system.time(coordinates(X, alr_basis(K), sparse_basis = FALSE))
 #' system.time(coordinates(X, alr_basis(K), sparse_basis = TRUE))
-#' system.time(coordinates(X, 'alr', sparse_basis = TRUE))
+#' system.time(coordinates(X, 'alr'))
 #' @export
 coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
   class_type = class(X)
@@ -287,7 +344,7 @@ coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
   }
   class(COORD) = class_type
   attr(COORD, 'basis') = basis
-  COORD
+  set.coda(COORD)
 }
 
 #' coordinates with respect an specific basis
@@ -310,7 +367,8 @@ composition = function(H, basis = NULL, label = 'x', sparse_basis = FALSE){
   class_type = class(H)
   if(is.null(basis) & "basis" %in% names(attributes(H))){
     basis = attr(H, 'basis')
-  }else{
+  }
+  if(is.null(basis)){
     basis = 'ilr'
   }
   is_vector = is.atomic(H) & !is.list(H) & !is.matrix(H)

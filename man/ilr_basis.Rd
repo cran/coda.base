@@ -2,7 +2,7 @@
 % Please edit documentation in R/coordinates.R
 \name{ilr_basis}
 \alias{ilr_basis}
-\title{Build an isometric log-ratio basis}
+\title{Default Isometric log-ratio basis}
 \usage{
 ilr_basis(dim)
 }
@@ -13,8 +13,16 @@ ilr_basis(dim)
 matrix
 }
 \description{
-Build an isometric log-ratio basis
+Build an isometric log-ratio basis for a composition with k+1 parts
+\deqn{h_i = \sqrt{\frac{i}{i+1}} \log\frac{\sqrt[i]{\prod_{j=1}^i x_j}}{x_{i+1}}}{%
+h[i] = \sqrt(i/(i+1)) ( log(x[1] \ldots x[i])/i - log(x[i+1]) )}
+for \eqn{i in 1\ldots k}
 }
 \examples{
 ilr_basis(5)
+}
+\references{
+Egozcue, J.J., Pawlowsky-Glahn, V., Mateu-Figueras, G. and Barceló-Vidal C. (2003).
+\emph{Isometric logratio transformations for compositional data analysis}.
+Mathematical Geology, \strong{35}(3) 279-300
 }
