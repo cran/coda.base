@@ -206,7 +206,7 @@ sbp_basis = function(..., data, silent=F){
 #' Different approximations to approximate the principal balances of a compositional dataset.
 #'
 #' @param X compositional dataset
-#' @param method method to be used with Principal Balances. Methods available are: 'lsearch' or
+#' @param method method to be used with Principal Balances. Methods available are: 'exact', 'lsearch' or
 #' method to be passed to hclust function (for example `ward.D` or `ward.D2` to use Ward method).
 #' @param rep Number of restartings to be used with the local search algorithm. If zero is supplied
 #' (default), one local search is performed using an starting point close to the principal component
@@ -220,28 +220,40 @@ sbp_basis = function(..., data, silent=F){
 #' \emph{Principal balances}.
 #' in proceeding of the 4th International Workshop on Compositional Data Analysis (CODAWORK'11) (available online at \url{http://www-ma3.upc.edu/users/ortego/codawork11-Proceedings/Admin/Files/FilePaper/p55.pdf})
 #' @examples
-#' X = matrix(exp(rnorm(20*100)), nrow=100, ncol=20)
+#' set.seed(1)
+#' X = matrix(exp(rnorm(5*100)), nrow=100, ncol=5)
 #' # Optimal variance obtained with Principal components
-#' head(apply(coordinates(X, 'pc'), 2, var))
-#'# Solution obtained using a hill climbing algorithm from pc approximation
-#'head(apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var))
-#'# Solution obtained using a hill climbing algorithm using 10 restartings
-#'head(apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var))
+#' (v1 <- apply(coordinates(X, 'pc'), 2, var))
+#' # Optimal variance obtained with Principal balances
+#' (v2 <- apply(coordinates(X,pb_basis(X, method='exact')), 2, var))
+#' # Solution obtained using a hill climbing algorithm from pc approximation
+#' apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var)
+#' # Solution obtained using a hill climbing algorithm using 10 restartings
+#' apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var)
 #' # Solution obtained using Ward method
-#' head(apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
+#' (v3 <- apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
 #' # Solution obtained using Old Ward function (in R versions <= 3.0.3)
-#' head(apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var))
+#' apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
+#' # Plotting the variances
+#' barplot(rbind(v1,v2,v3), beside = TRUE, legend = c('PC','PB','Ward'), args.legend = list(cex = 0.8))
+#'
 #' @export
 pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
   X = as.matrix(X)
-  if(method == 'lsearch'){
-    if(rep == 0){
-      B = find_PB_pc_local_search(X)
-    }else{
-      B = find_PB_rnd_local_search(stats::cov(log(X)), rep=rep)
-    }
 
+  if(method %in% c('lsearch', 'exact')){
+    if(method == 'exact'){
+      B = find_PB(X)
+    }
+    if(method == 'lsearch'){
+      if(rep == 0){
+        B = find_PB_pc_local_search(X)
+      }else{
+        B = find_PB_rnd_local_search(stats::cov(log(X)), rep=rep)
+      }
+    }
   }else{
+    # Passing arguments to hclust function
     hh = stats::hclust(stats::as.dist(variation_array(X, only_variation = TRUE)), method=method, ...)
     bin = hh$merge
     df = as.data.frame(X)
@@ -260,9 +272,16 @@ pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
   B
 }
 
-#' coordinates with respect an specific basis
+#' @title Get coordinates from compositions w.r.t. an specific basis
 #'
+#' @description
 #' Calculate the coordinates of a composition with respect a given basis
+#'
+#' @details
+#' \code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
+#' used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
+#' log-contrast: 'alr' 'clr', 'ilr' or 'pc' for the additive log-ratio, centered log-ratio, isometric log-ratio or
+#' clr principal components respectively.
 #'
 #' @param X compositional dataset. Either a matrix, a data.frame or a vector
 #' @param basis basis used to calculate the coordinates. \code{basis} can be either a string or a matrix.
@@ -271,7 +290,10 @@ pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
 #' @param label name given to the coordinates
 #' @param sparse_basis Is the given matrix basis sparse? If TRUE calculation are carried
 #' taking into an account sparsity (default `FALSE`)
-#' @return coordinates with respect the given basis
+#'
+#' @return
+#' Coordinates of composition \code{X} with respect the given \code{basis}.
+#'
 #' @seealso See functions \code{\link{ilr_basis}}, \code{\link{alr_basis}},
 #' \code{\link{clr_basis}}, \code{\link{sbp_basis}}
 #' to define different compositional basis.
@@ -347,7 +369,7 @@ coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
   set.coda(COORD)
 }
 
-#' coordinates with respect an specific basis
+#' Get composition from coordinates w.r.t.  an specific basis
 #'
 #' Calculate a composition from coordinates with respect a given basis
 #'

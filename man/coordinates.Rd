@@ -2,7 +2,7 @@
 % Please edit documentation in R/coordinates.R
 \name{coordinates}
 \alias{coordinates}
-\title{coordinates with respect an specific basis}
+\title{Get coordinates from compositions w.r.t. an specific basis}
 \usage{
 coordinates(X, basis = "ilr", label = "x", sparse_basis = FALSE)
 }
@@ -19,10 +19,16 @@ to have log-ratio basis given in columns.}
 taking into an account sparsity (default `FALSE`)}
 }
 \value{
-coordinates with respect the given basis
+Coordinates of composition \code{X} with respect the given \code{basis}.
 }
 \description{
 Calculate the coordinates of a composition with respect a given basis
+}
+\details{
+\code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
+used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
+log-contrast: 'alr' 'clr', 'ilr' or 'pc' for the additive log-ratio, centered log-ratio, isometric log-ratio or
+clr principal components respectively.
 }
 \examples{
 coordinates(c(1,2,3,4,5))

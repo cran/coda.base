@@ -9,7 +9,7 @@ pb_basis(X, method, rep = 0, ordering = TRUE, ...)
 \arguments{
 \item{X}{compositional dataset}
 
-\item{method}{method to be used with Principal Balances. Methods available are: 'lsearch' or
+\item{method}{method to be used with Principal Balances. Methods available are: 'exact', 'lsearch' or
 method to be passed to hclust function (for example `ward.D` or `ward.D2` to use Ward method).}
 
 \item{rep}{Number of restartings to be used with the local search algorithm. If zero is supplied
@@ -28,17 +28,23 @@ matrix
 Different approximations to approximate the principal balances of a compositional dataset.
 }
 \examples{
-X = matrix(exp(rnorm(20*100)), nrow=100, ncol=20)
+set.seed(1)
+X = matrix(exp(rnorm(5*100)), nrow=100, ncol=5)
 # Optimal variance obtained with Principal components
-head(apply(coordinates(X, 'pc'), 2, var))
+(v1 <- apply(coordinates(X, 'pc'), 2, var))
+# Optimal variance obtained with Principal balances
+(v2 <- apply(coordinates(X,pb_basis(X, method='exact')), 2, var))
 # Solution obtained using a hill climbing algorithm from pc approximation
-head(apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var))
+apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var)
 # Solution obtained using a hill climbing algorithm using 10 restartings
-head(apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var))
+apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var)
 # Solution obtained using Ward method
-head(apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
+(v3 <- apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
 # Solution obtained using Old Ward function (in R versions <= 3.0.3)
-head(apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var))
+apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
+# Plotting the variances
+barplot(rbind(v1,v2,v3), beside = TRUE, legend = c('PC','PB','Ward'), args.legend = list(cex = 0.8))
+
 }
 \references{
 Pawlowsky-Glahn, V., Egozcue, J.J., Tolosana-Delgado R. (2011).

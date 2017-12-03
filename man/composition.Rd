@@ -2,7 +2,7 @@
 % Please edit documentation in R/coordinates.R
 \name{composition}
 \alias{composition}
-\title{coordinates with respect an specific basis}
+\title{Get composition from coordinates w.r.t.  an specific basis}
 \usage{
 composition(H, basis = NULL, label = "x", sparse_basis = FALSE)
 }
