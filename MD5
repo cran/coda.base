@@ -1,4 +1,4 @@
-8b1732ad208d2c8ecd4e30f34db86960 *DESCRIPTION
+abf3145554df5b9cb7ebc476aae72e06 *DESCRIPTION
 8e56f78196e0b5f88a76990ac646d200 *NAMESPACE
 c75c9af84261402208c3b9987e02c6f0 *NEWS
 c5601f52b60aafb18190106cbb361958 *R/RcppExports.R
@@ -23,7 +23,7 @@ dcf747b05023c5a39d3d289ff2d51c49 *src/Makevars
 70774c0cc0b37fdbce714a508e5ca125 *src/Makevars.win
 dc0ce012c735a09775c7ca7ab09a5841 *src/RcppExports.cpp
 23e6e4c9cc6d000386363509666cd74e *src/coda.cpp
-9be86053115647bdfa2f14b9ad68e245 *src/principal_balances.cpp
+36783b5658f7750a33ccab77f1136659 *src/principal_balances.cpp
 6386dc8ff8eda492e2b376266abd0ee3 *src/principal_balances.h
-2d3a5ef41ed9e8625ed9b0c67b6ca6e5 *src/sbp.cpp
+701facbe11f683269e0160aa59e123c1 *src/sbp.cpp
 fe54921e4002aee039da810837ab5cfe *src/sbp.h
