@@ -1,9 +1,9 @@
-abf3145554df5b9cb7ebc476aae72e06 *DESCRIPTION
+18c463edbdac9c4eedcbc7b3df4a4eec *DESCRIPTION
 8e56f78196e0b5f88a76990ac646d200 *NAMESPACE
-c75c9af84261402208c3b9987e02c6f0 *NEWS
+6d35adecd2a749fd11ed741ba0495d34 *NEWS
 c5601f52b60aafb18190106cbb361958 *R/RcppExports.R
 a17eeee56ae7cf4f25c3f973bc99de58 *R/coda.base.R
-45984f6fa474fcfa760ae3a0a8334e71 *R/coordinates.R
+15de3a68ec8e64be3e0f5b503a17a75b *R/coordinates.R
 ca9028d20c8a95375c5cf9bb22dacba4 *R/iteration_partition.R
 5f956504bb2534c9f565d5271a658257 *R/onLoad.R
 acd23989f62fb58b1f84d550b008c79c *R/other.R
@@ -12,7 +12,7 @@ cfa0952b29d39343f4bd3400cfff3cdd *inst/include/coda.h
 c60b929043d7285d8f32d7ff2ac0e828 *man/alr_basis.Rd
 5e68eaa36ccb6d6ce8b68e29ea3efe2a *man/clr_basis.Rd
 ec40c52dbfde54d9b6ed0d7db03e0d06 *man/composition.Rd
-eefce36f69e32ff81a90f4b0194a6739 *man/coordinates.Rd
+f465b49dd8ec2e5bb4935121b3902ecc *man/coordinates.Rd
 252d391cb3b50bed719d77ee8c0b7a91 *man/dist.Rd
 460ac0c787b1ea6fd21f65948e15a8f2 *man/ilr_basis.Rd
 b44f1806f525a0dd00f6d614467911fc *man/pb_basis.Rd

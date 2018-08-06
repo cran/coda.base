@@ -27,8 +27,8 @@ Calculate the coordinates of a composition with respect a given basis
 \details{
 \code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
 used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
-log-contrast: 'alr' 'clr', 'ilr' or 'pc' for the additive log-ratio, centered log-ratio, isometric log-ratio or
-clr principal components respectively.
+log-contrast: 'alr' 'clr', 'ilr', 'pc' or 'pb' for the additive log-ratio, centered log-ratio, isometric log-ratio,
+clr principal components or clr principal balances respectively.
 }
 \examples{
 coordinates(c(1,2,3,4,5))
