@@ -6,7 +6,7 @@
 Build an \code{\link{ilr_basis}} using a sequential binary partition or
 a generic coordinate system based on balances.}
 \usage{
-sbp_basis(..., data, silent = F)
+sbp_basis(..., data = NULL, silent = F)
 }
 \arguments{
 \item{...}{balances to consider}

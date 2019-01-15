@@ -4,13 +4,13 @@
 \alias{coordinates}
 \title{Get coordinates from compositions w.r.t. an specific basis}
 \usage{
-coordinates(X, basis = "ilr", label = "x", sparse_basis = FALSE)
+coordinates(X, basis = "ilr", label = NULL, sparse_basis = FALSE)
 }
 \arguments{
 \item{X}{compositional dataset. Either a matrix, a data.frame or a vector}
 
 \item{basis}{basis used to calculate the coordinates. \code{basis} can be either a string or a matrix.
-Accepted values for strings are: 'ilr' (default), 'clr', 'alr' and 'pc'. If \code{basis} is a matrix, it is expected
+Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pc', 'pb' and 'cdp'. If \code{basis} is a matrix, it is expected
 to have log-ratio basis given in columns.}
 
 \item{label}{name given to the coordinates}
@@ -27,8 +27,8 @@ Calculate the coordinates of a composition with respect a given basis
 \details{
 \code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
 used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
-log-contrast: 'alr' 'clr', 'ilr', 'pc' or 'pb' for the additive log-ratio, centered log-ratio, isometric log-ratio,
-clr principal components or clr principal balances respectively.
+log-contrast: 'alr' 'clr', 'ilr', 'pc', 'pb' and 'cdp', for the additive log-ratio, centered log-ratio, isometric log-ratio,
+clr principal components, clr principal balances or default's CoDaPack balances respectively.
 }
 \examples{
 coordinates(c(1,2,3,4,5))

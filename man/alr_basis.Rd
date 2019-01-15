@@ -4,7 +4,8 @@
 \alias{alr_basis}
 \title{Additive log-ratio basis}
 \usage{
-alr_basis(dim, denominator = dim, numerator = which(denominator != 1:dim))
+alr_basis(dim, denominator = dim, numerator = which(denominator !=
+  1:dim))
 }
 \arguments{
 \item{dim}{number of parts}

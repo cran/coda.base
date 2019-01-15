@@ -21,9 +21,12 @@ variation_array = function(X, only_variation = FALSE){
 #' Build an isometric log-ratio basis for a composition with k+1 parts
 #' \deqn{h_i = \sqrt{\frac{i}{i+1}} \log\frac{\sqrt[i]{\prod_{j=1}^i x_j}}{x_{i+1}}}{%
 #' h[i] = \sqrt(i/(i+1)) ( log(x[1] \ldots x[i])/i - log(x[i+1]) )}
-#' for \eqn{i in 1\ldots k}
+#' for \eqn{i in 1\ldots k}.
+#'
+#'Modifying parameter type (pivot or cdp) other ilr basis can be generated
 #'
 #' @param dim number of components
+#' @param type if different than `pivot` (pivot balances) or `cdp` (codapack balances) default balances are returned.
 #' @return matrix
 #' @references
 #' Egozcue, J.J., Pawlowsky-Glahn, V., Mateu-Figueras, G. and Barceló-Vidal C. (2003).
@@ -32,8 +35,15 @@ variation_array = function(X, only_variation = FALSE){
 #' @examples
 #' ilr_basis(5)
 #' @export
-ilr_basis = function(dim){
-  ilr_basis_default(dim)
+ilr_basis = function(dim, type = 'default'){
+  B = ilr_basis_default(dim)
+  if(type == 'pivot'){
+    return((-B)[,ncol(B):1][nrow(B):1,])
+  }
+  if(type == 'cdp'){
+    return(sbp_basis(cdp_partition(dim)))
+  }
+  B
 }
 
 #' Additive log-ratio basis
@@ -66,6 +76,45 @@ alr_basis = function(dim, denominator = dim, numerator = which(denominator != 1:
   }
   res[,numerator]
 }
+
+fillPartition = function(partition, row, left, right){
+  new_row = rep(0, ncol(partition))
+  if(right - left <= 0){
+    return(partition)
+  }
+  if(right - left == 1){
+    new_row[left] = 1
+    new_row[right] = -1
+    if(row == 0){
+      partition = rbind(new_row)
+    }else{
+      partition = rbind(partition, new_row)
+    }
+    return(partition)
+  }
+  middle = left + (0.5 + right - left)/2
+  new_row[left:floor(middle)] = 1
+  new_row[ceiling(middle):right] = -1
+  if(row == 0){
+    partition = rbind(new_row)
+  }else{
+    partition = rbind(partition, new_row)
+  }
+  partition = fillPartition(partition, nrow(partition), left, floor(middle))
+  partition = fillPartition(partition, nrow(partition), ceiling(middle), right)
+  return(partition)
+}
+
+#' CoDaPack's default binary partition
+#'
+#' Compute the default binary partition used in CoDaPack's software
+#'
+#' @param ncomp number of parts
+#' @return matrix
+#' @examples
+#' cdp_partition(4)
+#' @export
+cdp_partition = function(ncomp) unname(t(fillPartition(matrix(0, nrow = 1, ncol = ncomp), 0, 1, ncomp)))
 
 #' Centered log-ratio basis
 #'
@@ -126,13 +175,26 @@ clr_basis = function(dim){
 #'           b5 = b~f,
 #'           b6 = c~g, data = X)
 #' @export
-sbp_basis = function(..., data, silent=F){
-  if (!is.data.frame(data) && !is.environment(data) && !is.null(attr(data, "class")))
+sbp_basis = function(..., data = NULL, silent=F){
+  sbp = list(...)
+  if(is.null(data) & is.matrix(sbp[[1]])){
+    P = t(sbp[[1]])
+    df = as.data.frame(matrix(1, ncol(P), nrow = 1))
+    str_to_frm = function(vec){
+      frm = paste(stats::aggregate(nm ~ vec, subset(data.frame(nm = paste0('`',names(df), '`'), vec = -1 * vec,
+                                                               stringsAsFactors = FALSE), vec != 0),
+                                   FUN = paste, collapse= ' + ')[['nm']], collapse=' ~ ')
+      stats::as.formula(frm)
+    }
+    return(do.call('sbp_basis', c(apply(P, 1, str_to_frm), list(data=df)), envir = as.environment('package:coda.base')))
+  }
+
+  if (!is.data.frame(data) && !is.environment(data) && ( (is.matrix(data) && !is.null(colnames(data))) | !is.null(attr(data, "class"))))
     data <- as.data.frame(data)
   else if (is.array(data))
-    stop("'data' must be a data.frame, not a matrix or an array")
+    stop("'data' must be a data.frame or a matrix with column names")
 
-  sbp = list(...)
+
   if(!all(unlist(lapply(sbp, all.vars)) %in% c(names(data), names(sbp)))){
     stop("Balances should be columns of 'data'")
   }
@@ -201,6 +263,22 @@ sbp_basis = function(..., data, silent=F){
   RES
 }
 
+#' Isometric log-ratio basis based on Principal Components.
+#'
+#' Different approximations to approximate the principal balances of a compositional dataset.
+#'
+#' @param X compositional dataset
+#' @return matrix
+#'
+#' @export
+pc_basis = function(X){
+  X = as.matrix(X)
+  lX =  log(X)
+  pr = stats::princomp(lX - rowMeans(lX))
+  B = pr$loadings[,-ncol(X)]
+  B
+}
+
 #' Isometric log-ratio basis based on Principal Balances.
 #'
 #' Different approximations to approximate the principal balances of a compositional dataset.
@@ -240,7 +318,9 @@ sbp_basis = function(..., data, silent=F){
 #' @export
 pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
   X = as.matrix(X)
-
+  if(!(all(X > 0))){
+    stop("All components must be strictly positive.", call. = FALSE)
+  }
   if(method %in% c('lsearch', 'exact')){
     if(method == 'exact'){
       B = find_PB(X)
@@ -280,12 +360,12 @@ pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
 #' @details
 #' \code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
 #' used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
-#' log-contrast: 'alr' 'clr', 'ilr', 'pc' or 'pb' for the additive log-ratio, centered log-ratio, isometric log-ratio,
-#' clr principal components or clr principal balances respectively.
+#' log-contrast: 'alr' 'clr', 'ilr', 'pc', 'pb' and 'cdp', for the additive log-ratio, centered log-ratio, isometric log-ratio,
+#' clr principal components, clr principal balances or default's CoDaPack balances respectively.
 #'
 #' @param X compositional dataset. Either a matrix, a data.frame or a vector
 #' @param basis basis used to calculate the coordinates. \code{basis} can be either a string or a matrix.
-#' Accepted values for strings are: 'ilr' (default), 'clr', 'alr' and 'pc'. If \code{basis} is a matrix, it is expected
+#' Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pc', 'pb' and 'cdp'. If \code{basis} is a matrix, it is expected
 #' to have log-ratio basis given in columns.
 #' @param label name given to the coordinates
 #' @param sparse_basis Is the given matrix basis sparse? If TRUE calculation are carried
@@ -312,11 +392,14 @@ pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
 #' system.time(coordinates(X, alr_basis(K), sparse_basis = TRUE))
 #' system.time(coordinates(X, 'alr'))
 #' @export
-coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
+coordinates = function(X, basis = 'ilr', label = NULL, sparse_basis = FALSE){
   class_type = class(X)
   is_vector = is.atomic(X) & !is.list(X) & !is.matrix(X)
   is_data_frame = inherits(X, 'data.frame')
   RAW = X
+  if(is.list(basis) & !is.data.frame(basis)){
+    basis = do.call('sbp_basis', args = c(basis, list(data = X)), envir = as.environment('package:coda.base'))
+  }
   if(is_vector){
     class_type = 'double'
     RAW = matrix(X, nrow=1)
@@ -324,10 +407,18 @@ coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
   if(is_data_frame){
     RAW = as.matrix(X)
   }
+  non_compositional = rowSums(is.na(RAW) | RAW <= 0)
+  if(sum(non_compositional) > 0){
+    warning("Some observations are not compositional (either missing or non-strictly positive). They are returned as missing values.",
+            call. = FALSE)
+  }
+  sel_compositional = non_compositional == 0
   if(is.character(basis)){
-    sel = rowSums(is.na(RAW) | RAW <= 0) == 0
+    if(is.null(label)){
+      label = basis
+    }
     dim = ncol(RAW)
-    RAW.coda = matrix(RAW[sel, ], ncol = dim)
+    RAW.coda = matrix(RAW[sel_compositional, ], ncol = dim)
     coord.dim = dim - 1
     if(basis == 'ilr'){
       basis = ilr_basis(dim)
@@ -346,7 +437,7 @@ coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
             lRAW =  log(RAW.coda)
             pr = stats::princomp(lRAW - rowMeans(lRAW))
             basis = pr$loadings[,-dim]
-            COORD.coda = pr$scores[,-dim]
+            COORD.coda = coordinates(RAW.coda, basis = basis, label = 'pc')
           }else{
             if(basis == 'pb'){
               if(ncol(RAW.coda) > 15){
@@ -355,17 +446,30 @@ coordinates = function(X, basis = 'ilr', label = 'x', sparse_basis = FALSE){
               basis = pb_basis(RAW.coda, method = 'exact')
               COORD.coda = coordinates_basis(RAW.coda, basis, sparse = FALSE)
             }else{
-              stop(sprintf('Basis %d not recognized'))
+              if(basis == 'cdp'){
+                basis = sbp_basis(cdp_partition(dim))
+                COORD.coda = coordinates(RAW.coda, basis = basis, label = 'cdp')
+              }else{
+                stop(sprintf('Basis %d not recognized'))
+              }
             }
           }
         }
       }
     }
     COORD = matrix(NA_real_, ncol = coord.dim, nrow = nrow(RAW))
-    COORD[sel,] = COORD.coda
+    COORD[sel_compositional,] = COORD.coda
   }else{
     if(is.matrix(basis)){
-      COORD = coordinates_basis(RAW, basis, sparse_basis)
+      if(is.null(label)){
+        label = 'x'
+      }
+      dim = nrow(basis)
+      coord.dim = ncol(basis)
+      RAW.coda = matrix(RAW[sel_compositional, ], ncol = dim)
+      COORD.coda = coordinates_basis(RAW.coda, basis, sparse_basis)
+      COORD = matrix(NA_real_, ncol = coord.dim, nrow = nrow(RAW))
+      COORD[sel_compositional,] = COORD.coda
     }else{
       stop(sprintf('Basis need to be either an string or a matrix'))
     }
@@ -434,7 +538,12 @@ composition = function(H, basis = NULL, label = 'x', sparse_basis = FALSE){
           basis = clr_basis(dim)
           RAW = exp(COORD)
         }else{
-          stop(sprintf('Basis %d not recognized'))
+          if(basis == 'cdp'){
+            basis = sbp_basis(cdp_partition(dim))
+            RAW = composition(COORD, basis = basis)
+          }else{
+            stop(sprintf('Basis %d not recognized'))
+          }
         }
       }
     }
@@ -454,7 +563,7 @@ composition = function(H, basis = NULL, label = 'x', sparse_basis = FALSE){
   if(is_data_frame){
     RAW = as.data.frame(RAW)
   }
-  class(RAW) = class_type
+  class(RAW) = setdiff(class_type, 'coda')
   #attr(RAW, 'basis') = basis
   RAW
 }
