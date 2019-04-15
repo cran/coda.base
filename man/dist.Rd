@@ -19,7 +19,7 @@ method}
 \code{dist} returns an object of class "dist".
 }
 \description{
-This function overwrite \code{\link[stats]{dist}} function to contain Aitchison distance between
+This function overwrites \code{\link[stats]{dist}} function to contain Aitchison distance between
 compositions.
 }
 \examples{

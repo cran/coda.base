@@ -25,7 +25,7 @@ principal balance and so on)}
 matrix
 }
 \description{
-Different approximations to approximate the principal balances of a compositional dataset.
+Exact method to calculate the principal balances of a compositional dataset. Different methods to approximate the principal balances of a compositional dataset are also included.
 }
 \examples{
 set.seed(1)
@@ -43,7 +43,9 @@ apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var)
 # Solution obtained using Old Ward function (in R versions <= 3.0.3)
 apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
 # Plotting the variances
-barplot(rbind(v1,v2,v3), beside = TRUE, legend = c('PC','PB','Ward'), args.legend = list(cex = 0.8))
+barplot(rbind(v1,v2,v3), beside = TRUE,
+        legend = c('Principal Components','PB (Exact method)','PB (Ward approximation)'),
+        names = paste0('Comp.', 1:4), args.legend = list(cex = 0.8), ylab = 'Variance')
 
 }
 \references{
