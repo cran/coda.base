@@ -9,7 +9,7 @@ ilr_basis(dim, type = "default")
 \arguments{
 \item{dim}{number of components}
 
-\item{type}{if different than `pivot` (pivot balances) or `cdp` (codapack balances) default balances are returned.}
+\item{type}{if different than `pivot` (pivot balances) or `cdp` (codapack balances) default balances are returned, which computes a triangular Helmert matrix as defined by Egozcue et al., 2013.}
 }
 \value{
 matrix

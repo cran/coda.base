@@ -28,7 +28,7 @@ head(H2.alr)
 
 ## ------------------------------------------------------------------------
 H.clr = coordinates(X, basis = 'clr')
-head(H.clr, basis = TRUE)
+head(H.clr)
 
 ## ------------------------------------------------------------------------
 H1.ilr = coordinates(X)
@@ -43,17 +43,37 @@ H2.ilr = coordinates(X, basis = 'pc')
 head(H2.ilr)
 barplot(apply(H2.ilr, 2, var))
 
+## ------------------------------------------------------------------------
+cov(H2.ilr)
+
 ## ---- fig.width=5.5, fig.height=4, fig.align='center', caption='Variance of principal balances coordinates'----
 H3.ilr = coordinates(X, basis = 'pb')
 head(H3.ilr)
 barplot(apply(H3.ilr, 2, var))
 
 ## ------------------------------------------------------------------------
+cor(H3.ilr)
+
+## ------------------------------------------------------------------------
+X100 = exp(matrix(rnorm(1000*100), ncol = 100))
+
+## ------------------------------------------------------------------------
+PB1.ward = pb_basis(X100, method = 'ward.D2')
+
+## ------------------------------------------------------------------------
+PB1.lsearch = pb_basis(X100, method = 'lsearch')
+
+## ------------------------------------------------------------------------
+PC_approx = coordinates(X100, cbind(pc_basis(X100)[,1], PB1.ward[,1], PB1.lsearch[,1]))
+names(PC_approx) = c('PC', 'Ward', 'Local Search')
+apply(PC_approx, 2, var)
+
+## ------------------------------------------------------------------------
 H4.ilr = coordinates(X, basis = 'cdp')
 head(H4.ilr)
 
 ## ------------------------------------------------------------------------
-B = matrix(c(1,-1,2,0,
+B = matrix(c(-1,-1,2,0,
              1,0,-0.5,-0.5,
              -0.5,0.5,0,0), ncol = 3)
 H1.man = coordinates(X, basis = B)

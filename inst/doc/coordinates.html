@@ -12,14 +12,14 @@
 
 <meta name="author" content="Marc Comas-Cufí" />
 
-<meta name="date" content="2019-04-15" />
+<meta name="date" content="2019-07-02" />
 
 <title>Working with log-ratio coordinates in coda.base</title>
 
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
+<style type="text/css" data-origin="pandoc">
 div.sourceCode { overflow-x: auto; }
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
   margin: 0; padding: 0; vertical-align: baseline; border: none; }
@@ -55,11 +55,36 @@ code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
 code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
 <link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+
+
 
 </head>
 
@@ -69,8 +94,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 <h1 class="title toc-ignore">Working with log-ratio coordinates in <code>coda.base</code></h1>
-<h4 class="author"><em>Marc Comas-Cufí</em></h4>
-<h4 class="date"><em>2019-04-15</em></h4>
+<h4 class="author">Marc Comas-Cufí</h4>
+<h4 class="date">2019-07-02</h4>
 
 
 
@@ -85,8 +110,8 @@ X =<span class="st"> </span>parliament2017[,<span class="kw">c</span>(<span clas
 <h2>Defining log-ratio coordinates with <code>coda.base</code></h2>
 <div id="the-additive-logratio-alr-coordinates" class="section level3">
 <h3>The additive logratio (alr) coordinates</h3>
-<p>The alr coordinates are accessible by setting parameter <code>basis='alr'</code> or by using the building function <code>alr_basis</code>.</p>
-<p>The easiest way to define an alr-coordinates is to set <code>basis='alr'</code>.</p>
+<p>The alr coordinates are accessible by setting the parameter <code>basis='alr'</code> or by using the building function <code>alr_basis()</code>.</p>
+<p>If you don’t want the last part in the denominator, the easiest way to define an alr-coordinates is to set <code>basis='alr'</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H1.alr =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> <span class="st">'alr'</span>)
 <span class="kw">head</span>(H1.alr)
 <span class="co">#&gt;          alr1        alr2       alr3</span>
@@ -102,7 +127,7 @@ X =<span class="st"> </span>parliament2017[,<span class="kw">c</span>(<span clas
 <span class="co">#&gt; P2    0    1    0</span>
 <span class="co">#&gt; P3    0    0    1</span>
 <span class="co">#&gt; P4   -1   -1   -1</span></code></pre></div>
-<p>It defines an alr-coordinates were the first parts are used for the numerator of the log-quotient and the last part for the denominator.</p>
+<p>It defines an alr-coordinates were the first parts are used for the numerator of the log-quotient in order and the last part is used in the denominator.</p>
 <p>The basis can be reproduced using the function <code>alr_basis</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alr_basis</span>(<span class="dt">dim =</span> <span class="dv">4</span>)
 <span class="co">#&gt;      [,1] [,2] [,3]</span>
@@ -110,7 +135,7 @@ X =<span class="st"> </span>parliament2017[,<span class="kw">c</span>(<span clas
 <span class="co">#&gt; [2,]    0    1    0</span>
 <span class="co">#&gt; [3,]    0    0    1</span>
 <span class="co">#&gt; [4,]   -1   -1   -1</span></code></pre></div>
-<p>Function <code>alr_basis</code> allows to define other alr-coordinates by defining the numerator and the denominator.</p>
+<p>In fact, function <code>alr_basis</code> allows to define any type of alr-like coordinate by defining the numerator and the denominator:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">B.alr =<span class="st"> </span><span class="kw">alr_basis</span>(<span class="dt">dim =</span> <span class="dv">4</span>, <span class="dt">numerator =</span> <span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="dt">denominator =</span> <span class="dv">1</span>)
 B.alr
 <span class="co">#&gt;      [,1] [,2] [,3]</span>
@@ -118,7 +143,7 @@ B.alr
 <span class="co">#&gt; [2,]    0    1    0</span>
 <span class="co">#&gt; [3,]    0    0    1</span>
 <span class="co">#&gt; [4,]    1    0    0</span></code></pre></div>
-<p>The log-contrast matrix defining the basis can be used in <code>basis</code> parameter:</p>
+<p>The log-contrast matrix can be used in <code>basis</code> parameter:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H2.alr =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> B.alr)
 <span class="kw">head</span>(H2.alr)
 <span class="co">#&gt;            x1          x2         x3</span>
@@ -137,9 +162,9 @@ B.alr
 </div>
 <div id="the-centered-logratio-clr-coordinates" class="section level3">
 <h3>The centered logratio (clr) coordinates</h3>
-<p>Building centred log-ratio coordinates can be accomplished by setting parameter <code>basis=TRUE</code>:</p>
+<p>Building centered log-ratio coordinates can be accomplished by setting parameter <code>basis='clr'</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H.clr =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> <span class="st">'clr'</span>)
-<span class="kw">head</span>(H.clr, <span class="dt">basis =</span> <span class="ot">TRUE</span>)
+<span class="kw">head</span>(H.clr)
 <span class="co">#&gt;         clr1      clr2       clr3         clr4</span>
 <span class="co">#&gt; 1 0.24740605 0.4552643 -0.7114311  0.008760689</span>
 <span class="co">#&gt; 2 0.12971783 0.4504571 -0.8137740  0.233599031</span>
@@ -156,8 +181,8 @@ B.alr
 </div>
 <div id="the-isometric-logratio-ilr-coordinates" class="section level3">
 <h3>The isometric logratio (ilr) coordinates</h3>
-<p><code>coda.base</code> allows to define a wide variety of ilr coordinates: principal components (pc) coordinates, specific user balances coordinates, principal balances (pb) coordinates, balanced coordinates (default’s <a href="http://ima.udg.edu/codapack/">CoDaPack</a>’s coordinates).</p>
-<p>The default ilr coordinates used by <code>coda.base</code> are accessible by simply calling function <code>coordinates</code> without parameters.</p>
+<p><code>coda.base</code> allows to define a wide variety of ilr-coordinates: principal components (pc) coordinates, specific user balances coordinates, principal balances (pb) coordinates, balanced coordinates (default’s <a href="http://ima.udg.edu/codapack/">CoDaPack</a>’s coordinates).</p>
+<p>The default ilr coordinate used by <code>coda.base</code> are accessible by simply calling function <code>coordinates</code> without parameters:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H1.ilr =<span class="st"> </span><span class="kw">coordinates</span>(X)
 <span class="kw">head</span>(H1.ilr)
 <span class="co">#&gt;          ilr1      ilr2        ilr3</span>
@@ -177,7 +202,7 @@ B.alr
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">all.equal</span>( <span class="kw">coordinates</span>(X, <span class="dt">basis =</span> <span class="st">'ilr'</span>),
            H1.ilr )
 <span class="co">#&gt; [1] TRUE</span></code></pre></div>
-<p>Other easily accessible coordinate is the pc coordinates. pc coordinates define the first coordinate as the log-contrast with highest variance, the second the one independent from the first and with highest variance and so on:</p>
+<p>Other easily accessible coordinates are the Principal Component (PC) coordinates. PC coordinates define the first coordinate as the log-contrast with highest variance, the second the one independent from the first and with highest variance and so on:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H2.ilr =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> <span class="st">'pc'</span>)
 <span class="kw">head</span>(H2.ilr)
 <span class="co">#&gt;         pc1         pc2        pc3</span>
@@ -195,7 +220,13 @@ B.alr
 <span class="co">#&gt; P4 -0.5401671  0.5014372 -0.4547309</span>
 <span class="kw">barplot</span>(<span class="kw">apply</span>(H2.ilr, <span class="dv">2</span>, var))</code></pre></div>
 <p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
-<p>The pb coordinates are similar to pc coordinates but with the restriction that the log contrast are balances</p>
+<p>Note that the PC coordinates are independent:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cov</span>(H2.ilr)
+<span class="co">#&gt;               pc1           pc2           pc3</span>
+<span class="co">#&gt; pc1  4.475083e-01 -1.109697e-15 -7.286926e-16</span>
+<span class="co">#&gt; pc2 -1.109697e-15  3.650673e-02 -7.279583e-18</span>
+<span class="co">#&gt; pc3 -7.286926e-16 -7.279583e-18  1.257989e-02</span></code></pre></div>
+<p>The Principal Balance coordinates are similar to PC coordinates but with the restriction that the log contrast are balances</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H3.ilr =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> <span class="st">'pb'</span>)
 <span class="kw">head</span>(H3.ilr)
 <span class="co">#&gt;          pb1         pb2         pb3</span>
@@ -213,6 +244,28 @@ B.alr
 <span class="co">#&gt; P4  0.5  0.0000000 -0.7071068</span>
 <span class="kw">barplot</span>(<span class="kw">apply</span>(H3.ilr, <span class="dv">2</span>, var))</code></pre></div>
 <p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<p>Moreover, they are not independent:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cor</span>(H3.ilr)
+<span class="co">#&gt;            pb1       pb2        pb3</span>
+<span class="co">#&gt; pb1  1.0000000 0.6043786 -0.3197742</span>
+<span class="co">#&gt; pb2  0.6043786 1.0000000  0.1594538</span>
+<span class="co">#&gt; pb3 -0.3197742 0.1594538  1.0000000</span></code></pre></div>
+<p>Principal Balances are hard to compute when the number of components is very high. <code>coda.base</code> allows to build PB approximations using different algorithms.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">X100 =<span class="st"> </span><span class="kw">exp</span>(<span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="dv">1000</span><span class="op">*</span><span class="dv">100</span>), <span class="dt">ncol =</span> <span class="dv">100</span>))</code></pre></div>
+<ul>
+<li><em>Hierarchical clustering based algorithm</em>.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PB1.ward =<span class="st"> </span><span class="kw">pb_basis</span>(X100, <span class="dt">method =</span> <span class="st">'ward.D2'</span>)</code></pre></div>
+<ul>
+<li><em>Local search algorithm</em></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PB1.lsearch =<span class="st"> </span><span class="kw">pb_basis</span>(X100, <span class="dt">method =</span> <span class="st">'lsearch'</span>)</code></pre></div>
+<p>We can compare they performance (variance explained by the first balance) with respect to the principal components.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PC_approx =<span class="st"> </span><span class="kw">coordinates</span>(X100, <span class="kw">cbind</span>(<span class="kw">pc_basis</span>(X100)[,<span class="dv">1</span>], PB1.ward[,<span class="dv">1</span>], PB1.lsearch[,<span class="dv">1</span>]))
+<span class="kw">names</span>(PC_approx) =<span class="st"> </span><span class="kw">c</span>(<span class="st">'PC'</span>, <span class="st">'Ward'</span>, <span class="st">'Local Search'</span>)
+<span class="kw">apply</span>(PC_approx, <span class="dv">2</span>, var)
+<span class="co">#&gt;       x1       x2       x3 </span>
+<span class="co">#&gt; 1.668943 1.366441 1.537437</span></code></pre></div>
 <p>Finally, <code>coda.base</code> allows to define the default CoDaPack basis which consists in defining well balanced balances, i.e. equal number of branches in each balance.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">H4.ilr =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> <span class="st">'cdp'</span>)
 <span class="kw">head</span>(H4.ilr)
@@ -233,21 +286,21 @@ B.alr
 <div id="defining-coordinates-manually" class="section level3">
 <h3>Defining coordinates manually</h3>
 <p>We can define the coordinates directly by providing the log-contrast matrix.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">B =<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="op">-</span><span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">0</span>,
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">B =<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>,<span class="op">-</span><span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">0</span>,
              <span class="dv">1</span>,<span class="dv">0</span>,<span class="op">-</span><span class="fl">0.5</span>,<span class="op">-</span><span class="fl">0.5</span>,
              <span class="fl">-0.5</span>,<span class="fl">0.5</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="dt">ncol =</span> <span class="dv">3</span>)
 H1.man =<span class="st"> </span><span class="kw">coordinates</span>(X, <span class="dt">basis =</span> B)
 <span class="kw">head</span>(H1.man)
-<span class="co">#&gt;         x1        x2          x3</span>
-<span class="co">#&gt; 1 15.45379 0.5987412  0.10392914</span>
-<span class="co">#&gt; 2 17.02629 0.4198053  0.16036964</span>
-<span class="co">#&gt; 3 17.44436 0.6332727  0.08738560</span>
-<span class="co">#&gt; 4 13.77042 0.7720507  0.13319315</span>
-<span class="co">#&gt; 5 11.62718 0.6006268 -0.03593861</span>
-<span class="co">#&gt; 6 18.10523 0.2454919  0.05013888</span>
+<span class="co">#&gt;          x1        x2          x3</span>
+<span class="co">#&gt; 1 -2.125532 0.5987412  0.10392914</span>
+<span class="co">#&gt; 2 -2.207723 0.4198053  0.16036964</span>
+<span class="co">#&gt; 3 -1.973384 0.6332727  0.08738560</span>
+<span class="co">#&gt; 4 -2.290402 0.7720507  0.13319315</span>
+<span class="co">#&gt; 5 -1.232257 0.6006268 -0.03593861</span>
+<span class="co">#&gt; 6 -1.277088 0.2454919  0.05013888</span>
 <span class="co">#&gt;  Basis:</span>
 <span class="co">#&gt;    x1   x2   x3</span>
-<span class="co">#&gt; P1  1  1.0 -0.5</span>
+<span class="co">#&gt; P1 -1  1.0 -0.5</span>
 <span class="co">#&gt; P2 -1  0.0  0.5</span>
 <span class="co">#&gt; P3  2 -0.5  0.0</span>
 <span class="co">#&gt; P4  0 -0.5  0.0</span></code></pre></div>

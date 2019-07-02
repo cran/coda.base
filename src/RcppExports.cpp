@@ -177,6 +177,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// find_PB_log
+arma::mat find_PB_log(arma::mat lX);
+RcppExport SEXP _coda_base_find_PB_log(SEXP lXSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type lX(lXSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_PB_log(lX));
+    return rcpp_result_gen;
+END_RCPP
+}
 // find_PB
 arma::mat find_PB(arma::mat X);
 RcppExport SEXP _coda_base_find_PB(SEXP XSEXP) {
@@ -267,6 +278,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_coda_base_inv_ilr_coordinates", (DL_FUNC) &_coda_base_inv_ilr_coordinates, 1},
     {"_coda_base_find_PB_rnd_local_search", (DL_FUNC) &_coda_base_find_PB_rnd_local_search, 2},
     {"_coda_base_find_PB_pc_local_search", (DL_FUNC) &_coda_base_find_PB_pc_local_search, 1},
+    {"_coda_base_find_PB_log", (DL_FUNC) &_coda_base_find_PB_log, 1},
     {"_coda_base_find_PB", (DL_FUNC) &_coda_base_find_PB, 1},
     {"_coda_base_find_PB2", (DL_FUNC) &_coda_base_find_PB2, 3},
     {"_coda_base_find_PB3", (DL_FUNC) &_coda_base_find_PB3, 5},
