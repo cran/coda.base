@@ -6,6 +6,30 @@
 
 using namespace Rcpp;
 
+// find_predictive_balance
+arma::vec find_predictive_balance(arma::mat Y, arma::vec x, int method);
+RcppExport SEXP _coda_base_find_predictive_balance(SEXP YSEXP, SEXP xSEXP, SEXP methodSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_predictive_balance(Y, x, method));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pinv
+arma::mat pinv(arma::mat X);
+RcppExport SEXP _coda_base_pinv(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(pinv(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // c_variation_array
 arma::mat c_variation_array(arma::mat X, bool only_variation);
 RcppExport SEXP _coda_base_c_variation_array(SEXP XSEXP, SEXP only_variationSEXP) {
@@ -74,12 +98,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // clr_coordinates
-arma::mat clr_coordinates(arma::mat X);
+arma::mat clr_coordinates(arma::mat& X);
 RcppExport SEXP _coda_base_clr_coordinates(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     rcpp_result_gen = Rcpp::wrap(clr_coordinates(X));
     return rcpp_result_gen;
 END_RCPP
@@ -95,27 +119,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// coordinates_alr2
-arma::mat coordinates_alr2(arma::mat X, int denominator);
-RcppExport SEXP _coda_base_coordinates_alr2(SEXP XSEXP, SEXP denominatorSEXP) {
+// alr_coordinates
+arma::mat alr_coordinates(arma::mat& X, int denominator);
+RcppExport SEXP _coda_base_alr_coordinates(SEXP XSEXP, SEXP denominatorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< int >::type denominator(denominatorSEXP);
-    rcpp_result_gen = Rcpp::wrap(coordinates_alr2(X, denominator));
+    rcpp_result_gen = Rcpp::wrap(alr_coordinates(X, denominator));
     return rcpp_result_gen;
 END_RCPP
 }
-// coordinates_alr
-arma::mat coordinates_alr(arma::mat X, int denominator);
-RcppExport SEXP _coda_base_coordinates_alr(SEXP XSEXP, SEXP denominatorSEXP) {
+// matrix_coordinates
+arma::mat matrix_coordinates(arma::mat X, arma::mat B);
+RcppExport SEXP _coda_base_matrix_coordinates(SEXP XSEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    Rcpp::traits::input_parameter< int >::type denominator(denominatorSEXP);
-    rcpp_result_gen = Rcpp::wrap(coordinates_alr(X, denominator));
+    Rcpp::traits::input_parameter< arma::mat >::type B(BSEXP);
+    rcpp_result_gen = Rcpp::wrap(matrix_coordinates(X, B));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -133,12 +157,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // ilr_coordinates
-arma::mat ilr_coordinates(arma::mat X);
+arma::mat ilr_coordinates(arma::mat& X);
 RcppExport SEXP _coda_base_ilr_coordinates(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     rcpp_result_gen = Rcpp::wrap(ilr_coordinates(X));
     return rcpp_result_gen;
 END_RCPP
@@ -249,6 +273,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// find_principal_balance_01
+arma::mat find_principal_balance_01(arma::mat X);
+RcppExport SEXP _coda_base_find_principal_balance_01(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_principal_balance_01(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_principal_balance_02
+arma::mat find_principal_balance_02(arma::mat X);
+RcppExport SEXP _coda_base_find_principal_balance_02(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_principal_balance_02(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_principal_balance2_01
+arma::mat find_principal_balance2_01(arma::mat X);
+RcppExport SEXP _coda_base_find_principal_balance2_01(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_principal_balance2_01(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// find_principal_balance3_01
+arma::mat find_principal_balance3_01(arma::mat X);
+RcppExport SEXP _coda_base_find_principal_balance3_01(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_principal_balance3_01(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // arma_sampling_without_replacement
 arma::uvec arma_sampling_without_replacement(int n, int k);
 RcppExport SEXP _coda_base_arma_sampling_without_replacement(SEXP nSEXP, SEXP kSEXP) {
@@ -263,6 +331,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_coda_base_find_predictive_balance", (DL_FUNC) &_coda_base_find_predictive_balance, 3},
+    {"_coda_base_pinv", (DL_FUNC) &_coda_base_pinv, 1},
     {"_coda_base_c_variation_array", (DL_FUNC) &_coda_base_c_variation_array, 2},
     {"_coda_base_alr_basis_default", (DL_FUNC) &_coda_base_alr_basis_default, 1},
     {"_coda_base_clr_basis_default", (DL_FUNC) &_coda_base_clr_basis_default, 1},
@@ -271,8 +341,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_coda_base_ilr_to_alr", (DL_FUNC) &_coda_base_ilr_to_alr, 1},
     {"_coda_base_clr_coordinates", (DL_FUNC) &_coda_base_clr_coordinates, 1},
     {"_coda_base_inv_clr_coordinates", (DL_FUNC) &_coda_base_inv_clr_coordinates, 1},
-    {"_coda_base_coordinates_alr2", (DL_FUNC) &_coda_base_coordinates_alr2, 2},
-    {"_coda_base_coordinates_alr", (DL_FUNC) &_coda_base_coordinates_alr, 2},
+    {"_coda_base_alr_coordinates", (DL_FUNC) &_coda_base_alr_coordinates, 2},
+    {"_coda_base_matrix_coordinates", (DL_FUNC) &_coda_base_matrix_coordinates, 2},
     {"_coda_base_coordinates_basis", (DL_FUNC) &_coda_base_coordinates_basis, 3},
     {"_coda_base_ilr_coordinates", (DL_FUNC) &_coda_base_ilr_coordinates, 1},
     {"_coda_base_inv_ilr_coordinates", (DL_FUNC) &_coda_base_inv_ilr_coordinates, 1},
@@ -284,6 +354,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_coda_base_find_PB3", (DL_FUNC) &_coda_base_find_PB3, 5},
     {"_coda_base_find_PB4", (DL_FUNC) &_coda_base_find_PB4, 1},
     {"_coda_base_find_PB5", (DL_FUNC) &_coda_base_find_PB5, 1},
+    {"_coda_base_find_principal_balance_01", (DL_FUNC) &_coda_base_find_principal_balance_01, 1},
+    {"_coda_base_find_principal_balance_02", (DL_FUNC) &_coda_base_find_principal_balance_02, 1},
+    {"_coda_base_find_principal_balance2_01", (DL_FUNC) &_coda_base_find_principal_balance2_01, 1},
+    {"_coda_base_find_principal_balance3_01", (DL_FUNC) &_coda_base_find_principal_balance3_01, 1},
     {"_coda_base_arma_sampling_without_replacement", (DL_FUNC) &_coda_base_arma_sampling_without_replacement, 2},
     {NULL, NULL, 0}
 };

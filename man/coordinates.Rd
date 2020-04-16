@@ -4,7 +4,8 @@
 \alias{coordinates}
 \title{Get coordinates from compositions w.r.t. an specific basis}
 \usage{
-coordinates(X, basis = "ilr", label = NULL, sparse_basis = FALSE)
+coordinates(X, basis = "ilr", label = ifelse(is.character(basis),
+  basis, "h"), basis_return = TRUE)
 }
 \arguments{
 \item{X}{compositional dataset. Either a matrix, a data.frame or a vector}
@@ -15,8 +16,7 @@ to have log-ratio basis given in columns.}
 
 \item{label}{name given to the coordinates}
 
-\item{sparse_basis}{Is the given matrix basis sparse? If TRUE calculation are carried
-taking into an account sparsity (default `FALSE`)}
+\item{basis_return}{Should the basis be returned as attribute? (default: \code{TRUE})}
 }
 \value{
 Coordinates of composition \code{X} with respect the given \code{basis}.
@@ -35,12 +35,11 @@ coordinates(c(1,2,3,4,5))
 # basis is shown if 'coda.base.basis' option is set to TRUE
 options('coda.base.basis' = TRUE)
 coordinates(c(1,2,3,4,5))
-# Setting sparse_basi to TRUE can improve performance if log-ratio basis is sparse.
+# Default transformation improves performance.
 N = 100
 K = 1000
 X = matrix(exp(rnorm(N*K)), nrow=N, ncol=K)
-system.time(coordinates(X, alr_basis(K), sparse_basis = FALSE))
-system.time(coordinates(X, alr_basis(K), sparse_basis = TRUE))
+system.time(coordinates(X, alr_basis(K)))
 system.time(coordinates(X, 'alr'))
 }
 \seealso{

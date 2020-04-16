@@ -8,7 +8,7 @@ knitr::opts_chunk$set(
 library(coda.base)
 # By default basis is not shown, in this vignette we turn on basis showing.
 options('coda.base.basis' = TRUE)
-data('catalan_elections_2017')
+data('parliament2017')
 X = parliament2017[,c('erc','jxcat','psc','cs')]
 
 ## ------------------------------------------------------------------------
