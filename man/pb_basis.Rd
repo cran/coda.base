@@ -4,17 +4,23 @@
 \alias{pb_basis}
 \title{Isometric log-ratio basis based on Principal Balances.}
 \usage{
-pb_basis(X, method, rep = 0, ordering = TRUE, ...)
+pb_basis(
+  X,
+  method,
+  constrained.complete_up = FALSE,
+  cluster.method = "ward.D2",
+  ordering = TRUE,
+  ...
+)
 }
 \arguments{
 \item{X}{compositional dataset}
 
-\item{method}{method to be used with Principal Balances. Methods available are: 'exact', 'lsearch' or
-method to be passed to hclust function (for example `ward.D` or `ward.D2` to use Ward method).}
+\item{method}{method to be used with Principal Balances. Methods available are: 'exact', 'constrained' or 'cluster'.}
 
-\item{rep}{Number of restartings to be used with the local search algorithm. If zero is supplied
-(default), one local search is performed using an starting point close to the principal component
-solution.}
+\item{constrained.complete_up}{When searching up, should the algorithm try to find possible siblings for the current balance (TRUE) or build a parent directly forcing current balance to be part of the next balance (default: FALSE). While the first is more exhaustive and given better results the second is faster and can be used with highe dimensional datasets.}
+
+\item{cluster.method}{Method to be used with the hclust function (default: `ward.D2`) or any other method available in  hclust function}
 
 \item{ordering}{should the principal balances found be returned ordered? (first column, first
 principal balance and so on)}
@@ -30,21 +36,20 @@ Exact method to calculate the principal balances of a compositional dataset. Dif
 \examples{
 set.seed(1)
 X = matrix(exp(rnorm(5*100)), nrow=100, ncol=5)
+
 # Optimal variance obtained with Principal components
 (v1 <- apply(coordinates(X, 'pc'), 2, var))
 # Optimal variance obtained with Principal balances
 (v2 <- apply(coordinates(X,pb_basis(X, method='exact')), 2, var))
-# Solution obtained using a hill climbing algorithm from pc approximation
-apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var)
-# Solution obtained using a hill climbing algorithm using 10 restartings
-apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var)
+# Solution obtained using constrained method
+(v3 <- apply(coordinates(X,pb_basis(X, method='constrained')), 2, var))
 # Solution obtained using Ward method
-(v3 <- apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
-# Solution obtained using Old Ward function (in R versions <= 3.0.3)
-apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
+(v4 <- apply(coordinates(X,pb_basis(X, method='cluster')), 2, var))
+
 # Plotting the variances
-barplot(rbind(v1,v2,v3), beside = TRUE,
-        legend = c('Principal Components','PB (Exact method)','PB (Ward approximation)'),
+barplot(rbind(v1,v2,v3,v4), beside = TRUE, ylim = c(0,2),
+        legend = c('Principal Components','PB (Exact method)',
+                   'PB (Constrained)','PB (Ward approximation)'),
         names = paste0('Comp.', 1:4), args.legend = list(cex = 0.8), ylab = 'Variance')
 
 }

@@ -195,7 +195,8 @@ sbp_basis = function(..., data = NULL, silent=F){
                                    FUN = paste, collapse= ' + ')[['nm']], collapse=' ~ ')
       stats::as.formula(frm)
     }
-    return(do.call('sbp_basis', c(apply(P, 1, str_to_frm), list(data=df)))) #, envir = as.environment('package:coda.base')
+    return(do.call('sbp_basis', c(apply(P, 1, str_to_frm), list(data=df,
+                                                                silent = silent)))) #, envir = as.environment('package:coda.base')
   }
 
   if (!is.data.frame(data) && !is.environment(data) && ( (is.matrix(data) && !is.null(colnames(data))) | !is.null(attr(data, "class"))))
@@ -277,11 +278,9 @@ sbp_basis = function(..., data = NULL, silent=F){
 #' Exact method to calculate the principal balances of a compositional dataset. Different methods to approximate the principal balances of a compositional dataset are also included.
 #'
 #' @param X compositional dataset
-#' @param method method to be used with Principal Balances. Methods available are: 'exact', 'lsearch' or
-#' method to be passed to hclust function (for example `ward.D` or `ward.D2` to use Ward method).
-#' @param rep Number of restartings to be used with the local search algorithm. If zero is supplied
-#' (default), one local search is performed using an starting point close to the principal component
-#' solution.
+#' @param method method to be used with Principal Balances. Methods available are: 'exact', 'constrained' or 'cluster'.
+#' @param constrained.complete_up When searching up, should the algorithm try to find possible siblings for the current balance (TRUE) or build a parent directly forcing current balance to be part of the next balance (default: FALSE). While the first is more exhaustive and given better results the second is faster and can be used with highe dimensional datasets.
+#' @param cluster.method Method to be used with the hclust function (default: `ward.D2`) or any other method available in  hclust function
 #' @param ordering should the principal balances found be returned ordered? (first column, first
 #' principal balance and so on)
 #' @param ... parameters passed to hclust function
@@ -293,53 +292,80 @@ sbp_basis = function(..., data = NULL, silent=F){
 #' @examples
 #' set.seed(1)
 #' X = matrix(exp(rnorm(5*100)), nrow=100, ncol=5)
+#'
 #' # Optimal variance obtained with Principal components
 #' (v1 <- apply(coordinates(X, 'pc'), 2, var))
 #' # Optimal variance obtained with Principal balances
 #' (v2 <- apply(coordinates(X,pb_basis(X, method='exact')), 2, var))
-#' # Solution obtained using a hill climbing algorithm from pc approximation
-#' apply(coordinates(X,pb_basis(X, method='lsearch')), 2, var)
-#' # Solution obtained using a hill climbing algorithm using 10 restartings
-#' apply(coordinates(X,pb_basis(X, method='lsearch', rep=10)), 2, var)
+#' # Solution obtained using constrained method
+#' (v3 <- apply(coordinates(X,pb_basis(X, method='constrained')), 2, var))
 #' # Solution obtained using Ward method
-#' (v3 <- apply(coordinates(X,pb_basis(X, method='ward.D2')), 2, var))
-#' # Solution obtained using Old Ward function (in R versions <= 3.0.3)
-#' apply(coordinates(X,pb_basis(X, method='ward.D')), 2, var)
+#' (v4 <- apply(coordinates(X,pb_basis(X, method='cluster')), 2, var))
+#'
 #' # Plotting the variances
-#' barplot(rbind(v1,v2,v3), beside = TRUE,
-#'         legend = c('Principal Components','PB (Exact method)','PB (Ward approximation)'),
+#' barplot(rbind(v1,v2,v3,v4), beside = TRUE, ylim = c(0,2),
+#'         legend = c('Principal Components','PB (Exact method)',
+#'                    'PB (Constrained)','PB (Ward approximation)'),
 #'         names = paste0('Comp.', 1:4), args.legend = list(cex = 0.8), ylab = 'Variance')
 #'
 #' @export
-pb_basis = function(X, method, rep = 0, ordering = TRUE, ...){
+pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method = 'ward.D2',
+                    ordering = TRUE, ...){
   X = as.matrix(X)
   if(!(all(X > 0))){
     stop("All components must be strictly positive.", call. = FALSE)
   }
-  if(method %in% c('lsearch', 'exact')){
+  if(method %in% c('constrained', 'exact')){
     if(method == 'exact'){
       B = find_PB(X)
     }
-    if(method == 'lsearch'){
-      if(rep == 0){
-        B = find_PB_pc_local_search(X)
+    if(method == 'constrained'){
+      # B = t(fBalChip(X)$bal)
+      B = find_PB_using_pc_recursively_forcing_parents(X)
+    }
+    if(method == 'constrained2'){
+      B = find_PB_using_pc(X)
+    }
+    # if(method == 'lsearch'){
+    #   if(rep == 0){
+    #     B = find_PB_pc_local_search(X)
+    #   }else{
+    #     B = find_PB_rnd_local_search(stats::cov(log(X)), rep=rep)
+    #   }
+    # }
+  }else if(method == 'cluster'){
+    # Passing arguments to hclust function
+    hh = stats::hclust(stats::as.dist(variation_array(X, only_variation = TRUE)), method=cluster.method, ...)
+    B = matrix(0, ncol = nrow(hh$merge), nrow = ncol(X))
+    for(i in 1:nrow(hh$merge)){
+      if(hh$merge[i,1] < 0 & hh$merge[i,2] < 0){
+        B[-hh$merge[i,],i] = c(-1,+1)
       }else{
-        B = find_PB_rnd_local_search(stats::cov(log(X)), rep=rep)
+        if(hh$merge[i,1] > 0){
+          B[B[,hh$merge[i,1]] != 0,i] = -1
+        }else{
+          B[-hh$merge[i,1],i] = -1
+        }
+        if(hh$merge[i,2] > 0){
+          B[B[,hh$merge[i,2]] != 0,i] = +1
+        }else{
+          B[-hh$merge[i,2],i] = +1
+        }
       }
     }
-  }else{
-    # Passing arguments to hclust function
-    hh = stats::hclust(stats::as.dist(variation_array(X, only_variation = TRUE)), method=method, ...)
-    bin = hh$merge
-    df = as.data.frame(X)
-    names(df) = paste0('P.', 1:NCOL(df))
-    nms = paste0('P',gsub('-','.', bin))
-    dim(nms) = dim(bin)
-    sbp = apply(nms, 1, paste, collapse='~')
-    id = seq_along(sbp)
-    sbp.exp = paste(sprintf("%s = %s ~ %s", paste0('P', id), nms[,1], nms[,2]),
-                    collapse=', ')
-    B = eval(parse(text = sprintf("sbp_basis(%s,data=df)", sbp.exp)))[,rev(id), drop = FALSE]
+    B = sbp_basis(B[,nrow(hh$merge):1, drop = FALSE])
+    # bin = hh$merge
+    # df = as.data.frame(X)
+    # names(df) = paste0('P.', 1:NCOL(df))
+    # nms = paste0('P',gsub('-','.', bin))
+    # dim(nms) = dim(bin)
+    # sbp = apply(nms, 1, paste, collapse='~')
+    # id = seq_along(sbp)
+    # sbp.exp = paste(sprintf("%s = %s ~ %s", paste0('P', id), nms[,1], nms[,2]),
+    #                 collapse=', ')
+    # B = eval(parse(text = sprintf("sbp_basis(%s,data=df)", sbp.exp)))[,rev(id), drop = FALSE]
+  } else{
+    stop(sprintf("Method %s does not exist", method))
   }
   if(ordering){
     B = B[,order(apply(coordinates(X, B, basis_return = FALSE), 2, stats::var), decreasing = TRUE), drop = FALSE]

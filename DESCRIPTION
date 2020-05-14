@@ -1,8 +1,8 @@
 Package: coda.base
 Type: Package
 Title: A Basic Set of Functions for Compositional Data Analysis
-Version: 0.2.2
-Date: 2020-04-10
+Version: 0.3.1
+Date: 2020-05-14
 Authors@R: c(person("Marc", "Comas-Cufí", role = c("aut", "cre"), 
                     email = "mcomas@imae.udg.edu", comment = c(ORCID = "0000-0001-9759-0622")))
 Description: A minimum set of functions to perform compositional data analysis
@@ -17,11 +17,11 @@ License: GPL
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: yes
-RoxygenNote: 6.1.1.9000
+RoxygenNote: 7.1.0
 Suggests: knitr, rmarkdown, testthat (>= 2.1.0)
 VignetteBuilder: knitr
-Packaged: 2020-04-16 07:10:50 UTC; marc
+Packaged: 2020-05-14 16:39:06 UTC; marc
 Author: Marc Comas-Cufí [aut, cre] (<https://orcid.org/0000-0001-9759-0622>)
 Maintainer: Marc Comas-Cufí <mcomas@imae.udg.edu>
 Repository: CRAN
-Date/Publication: 2020-04-16 09:00:07 UTC
+Date/Publication: 2020-05-14 17:10:29 UTC

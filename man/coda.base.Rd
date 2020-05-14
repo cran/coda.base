@@ -3,7 +3,6 @@
 \docType{package}
 \name{coda.base}
 \alias{coda.base}
-\alias{coda.base-package}
 \title{coda.base}
 \description{
 A minimum set of functions to perform compositional data analysis

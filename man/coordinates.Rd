@@ -4,8 +4,12 @@
 \alias{coordinates}
 \title{Get coordinates from compositions w.r.t. an specific basis}
 \usage{
-coordinates(X, basis = "ilr", label = ifelse(is.character(basis),
-  basis, "h"), basis_return = TRUE)
+coordinates(
+  X,
+  basis = "ilr",
+  label = ifelse(is.character(basis), basis, "h"),
+  basis_return = TRUE
+)
 }
 \arguments{
 \item{X}{compositional dataset. Either a matrix, a data.frame or a vector}

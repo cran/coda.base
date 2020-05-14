@@ -1,666 +1,453 @@
-#define ARMA_NO_DEBUG
+// #ifndef balance_optimal_H
+// #define balance_optimal_H
 
-// [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
-#include "sbp.h"
-#include "principal_balances.h"
+#include "balance.h"
 #include "coda.h"
 
-void print_list(std::vector<SBP> SOLS){
-  Rcpp::Rcout << ":Begin list:" << std::endl;
-  for(unsigned int i=0; i<SOLS.size(); i++){
-    Rcpp::Rcout << "Element " << i << std::endl;
-    SOLS[i].print_status(true,true,true);
-  }
-  Rcpp::Rcout << ":End list:" << std::endl;
+const double SQR2DIV2 = 0.70710678118;
+
+void optimise(Balance<MaximumVariance>& balance, arma::mat& X){
+  MaximumVariance ebalance = MaximumVariance(balance.nodes, X);
+  balance.setEvaluator(ebalance);
+  balance.setWithExhaustiveSearch();
 }
-arma::vec balance(int K, SBP sbp){
-  arma::uvec L = sbp.getL();
-  arma::uvec R = sbp.getR();
-  arma::uvec partition = arma::zeros<arma::uvec>(K);
-  for(unsigned int i = 0; i< L.n_elem; i++){
-    partition(sbp.get_indices(L[i])).fill(1);
-  }
-  for(unsigned int i = 0; i< R.n_elem; i++){
-    partition(sbp.get_indices(R[i])).fill(2);
-  }
-  arma::uvec O = arma::zeros<arma::uvec>(K);
 
-  arma::uvec iL = find(partition == 1);
-  arma::uvec iR = find(partition == 2);
+void optimise_balance_using_pc(Balance<MaximumVariance>& balance, arma::mat& X){
+  MaximumVariance ebalance = MaximumVariance(balance.nodes, X);
+  balance.setEvaluator(ebalance);
+  if(balance.nodes.size() == 2){
+    arma::uvec uL(1), uR(1);
+    uL[0] = 0; uR[0] = 1;
+    ebalance.eval(uL, uR, 1, 1);
+    balance.set(uL, uR);
+  }else{
+    arma::mat Xsub = arma::mat(X.n_rows, balance.nodes.size());
+    for(int i = 0; i < Xsub.n_cols; i++){
+      Xsub.col(i) = X.col(balance.nodes[i][0]);
+      for(int j = 1; j < balance.nodes[i].n_elem; j++){
+        Xsub.col(i) += X.col(balance.nodes[i][j]);
+      }
+    }
+    arma::mat U, V;
+    arma::vec s;
 
-  double nL = (double)iL.n_elem;
-  double nR = (double)iR.n_elem;
+    arma::svd_econ(U, s, V, clr_coordinates(Xsub));
+    // Rcpp::Rcout << V.col(0).t();
+    balance.setWithLogContrast(V.col(0));
+
+  }
+}
+
+arma::vec get_balance_using_pc(arma::mat& X){
+  unsigned D = X.n_cols;
+  if(D == 2){
+    arma::vec balance = {+SQR2DIV2, -SQR2DIV2};
+    return(balance);
+  }else{
+    arma::vec eigval;
+    arma::mat eigvec;
+
+    arma::mat S = cov(clr_coordinates(X));
+    eig_sym( eigval, eigvec, S);
+
+    arma::vec V = eigvec.tail_cols(1);
+    // Rcpp::Rcout << V.t();
+
+    unsigned imin = index_min(V);
+    unsigned imax = index_max(V);
+
+    V(imin) = 0;
+    V(imax) = 0;
+    arma::uvec ord = sort_index(abs(V), "descend");
+    arma::uvec uL(D), uR(D);
+    uL[0] = imin; uR[0] = imax;
+    unsigned l = 1, r = 1;
+    arma::vec balance = arma::zeros(D);
+    balance[imin] = -SQR2DIV2;
+    balance[imax] = +SQR2DIV2;
+    // double bestScore = as_scalar(balance.t() * S * balance);
+    double bestScore = fabs(dot(eigvec.tail_cols(1), balance));
+    double bestR = 1, bestL = 1;
+    for(unsigned i = 0; i < D-2; i++){
+      if(V(ord[i]) < 0) uL(l++) = ord[i];
+      else uR(r++) = ord[i];
+
+      balance(uL.head(l)).fill(-1.0/l * sqrt((double)l*r/(l+r)));
+      balance(uR.head(r)).fill(+1.0/r * sqrt((double)l*r/(l+r)));
+
+      // double score = as_scalar(balance.t() * S * balance);
+      double score = fabs(dot(eigvec.tail_cols(1), balance));
+
+      //Rcpp::Rcout << balance.t();
+      //Rcpp::Rcout << "Value:" << score <<std::endl;
+      if(score > bestScore){
+        bestScore = score;
+        bestL = l;
+        bestR = r;
+      }
+    }
+
+    balance.fill(0);
+    balance(uL.head(bestL)).fill(-1.0/bestL * sqrt((double)bestL*bestR/(bestL+bestR)));
+    balance(uR.head(bestR)).fill(+1.0/bestR * sqrt((double)bestL*bestR/(bestL+bestR)));
+    return(balance);
+
+  }
+}
+
+void optimise_using_pc_forcing_branch(Balance<MaximumVariance>& balance, arma::mat& X, unsigned forced){
+  MaximumVariance ebalance = MaximumVariance(balance.nodes, X);
+  balance.setEvaluator(ebalance);
+  if(balance.nodes.size() == 2){
+    arma::uvec uL(1), uR(1);
+    uL[0] = 0; uR[0] = 1;
+    ebalance.eval(uL, uR, 1, 1);
+    balance.set(uL, uR);
+  }else{
+    arma::mat Xsub = arma::mat(X.n_rows, balance.nodes.size());
+    for(int i = 0; i < Xsub.n_cols; i++){
+      Xsub.col(i) = X.col(balance.nodes[i][0]);
+      for(int j = 1; j < balance.nodes[i].n_elem; j++){
+        Xsub.col(i) += X.col(balance.nodes[i][j]);
+      }
+    }
+    arma::mat U, V;
+    arma::vec s;
+
+    arma::svd_econ(U, s, V, clr_coordinates(Xsub));
+    arma::uvec uF = arma::uvec(1);
+    uF[0] = forced;
+    balance.setWithLogContrastForceBranch(V.col(0), uF);
+
+  }
+}
+
+void optimise_recursively(Balance<MaximumVariance>& balance, arma::mat& X, arma::mat& pb_mat, int *pb_size){
+
+  optimise_balance_using_pc(balance, X);
+  pb_mat.col(*pb_size) = balance.getBalance();
+  (*pb_size)++;
+
+  Balance<MaximumVariance> top = balance.top();
+  if(top.nodes.size() > 1){
+    optimise_recursively(top, X, pb_mat, pb_size);
+  }
+  Balance<MaximumVariance> left = balance.left();
+  if(left.nodes.size() > 1){
+    optimise_recursively(left, X, pb_mat, pb_size);
+  }
+  Balance<MaximumVariance> right  = balance.right();
+  if(right.nodes.size() > 1){
+    optimise_recursively(right, X, pb_mat, pb_size);
+  }
+
+}
+
+void optimise_recursively_forcing_parents(Balance<MaximumVariance>& balance, arma::mat& X, arma::mat& pb_mat, int *pb_size){
+
+  optimise_balance_using_pc(balance, X);
+  pb_mat.col(*pb_size) = balance.getBalance();
+  (*pb_size)++;
+
+  Balance<MaximumVariance> top = balance.top();
+  while(top.nodes.size() > 1){
+    optimise_using_pc_forcing_branch(top, X, top.nodes.size()-1);
+    pb_mat.col(*pb_size) = top.getBalance();
+    (*pb_size)++;
+    Balance<MaximumVariance> left = top.left();
+    if(left.nodes.size() > 1){
+      optimise_recursively_forcing_parents(left, X, pb_mat, pb_size);
+    }
+    Balance<MaximumVariance> right  = top.right();
+    if(right.nodes.size() > 1){
+      optimise_recursively_forcing_parents(right, X, pb_mat, pb_size);
+    }
+    top = top.top();
+  }
+  Balance<MaximumVariance> left = balance.left();
+  if(left.nodes.size() > 1){
+    optimise_recursively_forcing_parents(left, X, pb_mat, pb_size);
+  }
+  Balance<MaximumVariance> right  = balance.right();
+  if(right.nodes.size() > 1){
+    optimise_recursively_forcing_parents(right, X, pb_mat, pb_size);
+  }
+
+}
+
+
+// [[Rcpp::export]]
+arma::mat find_PB(arma::mat& X){
+  int K = X.n_cols;
+
+  arma::mat pb_mat = arma::mat(K,K-1);
+
+  std::vector<Balance<MaximumVariance>> SOLS;
+
+  Balance<MaximumVariance> balance = Balance<MaximumVariance>(X.n_cols);
+
+  optimise(balance, X);
+
+  SOLS.push_back(balance);
+
+  for(int l=0;l<K-1;l++){
+    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
+    //print_list(SOLS);
+    double vBestSolution = 0;
+    int iBestSolution = -1;
+    for(unsigned int i =0; i< SOLS.size();i++){
+      double v = SOLS[i].eval();
+      if(v > vBestSolution){
+        vBestSolution = v;
+        iBestSolution = i;
+      }
+    }
+
+    pb_mat.col(l) = SOLS[iBestSolution].getBalance();
+
+    Balance<MaximumVariance> top = SOLS[iBestSolution].top();
+    Balance<MaximumVariance> left = SOLS[iBestSolution].left();
+    Balance<MaximumVariance> right  = SOLS[iBestSolution].right();
+
+    if(top.nodes.size() > 1){
+      optimise(top, X);
+      SOLS.push_back(top);
+    }
+    if(left.nodes.size() > 1){
+      optimise(left, X);
+      SOLS.push_back(left);
+    }
+    if(right.nodes.size() > 1){
+      optimise(right, X);
+      SOLS.push_back(right);
+    }
+
+    SOLS[iBestSolution] = SOLS.back();
+    SOLS.pop_back();
+
+    Rcpp::checkUserInterrupt();
+  }
+
+  return(pb_mat);
+}
+
+// [[Rcpp::export]]
+arma::mat find_PB_using_pc(arma::mat& X){
+  int K = X.n_cols;
+
+  arma::mat pb_mat = arma::mat(K,K-1);
+
+  std::vector<Balance<MaximumVariance>> SOLS;
+
+  Balance<MaximumVariance> balance = Balance<MaximumVariance>(X.n_cols);
+
+  optimise_balance_using_pc(balance, X);
+
+  SOLS.push_back(balance);
+
+  for(int l=0;l<K-1;l++){
+    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
+    //print_list(SOLS);
+    double vBestSolution = 0;
+    int iBestSolution = -1;
+    for(unsigned int i =0; i< SOLS.size();i++){
+      double v = SOLS[i].eval();
+      if(v > vBestSolution){
+        vBestSolution = v;
+        iBestSolution = i;
+      }
+    }
+
+    pb_mat.col(l) = SOLS[iBestSolution].getBalance();
+
+    Balance<MaximumVariance> top = SOLS[iBestSolution].top();
+    Balance<MaximumVariance> left = SOLS[iBestSolution].left();
+    Balance<MaximumVariance> right  = SOLS[iBestSolution].right();
+
+    if(top.nodes.size() > 1){
+      optimise_balance_using_pc(top, X);
+      SOLS.push_back(top);
+    }
+    if(left.nodes.size() > 1){
+      optimise_balance_using_pc(left, X);
+      SOLS.push_back(left);
+    }
+    if(right.nodes.size() > 1){
+      optimise_balance_using_pc(right, X);
+      SOLS.push_back(right);
+    }
+
+    SOLS[iBestSolution] = SOLS.back();
+    SOLS.pop_back();
+
+    Rcpp::checkUserInterrupt();
+  }
+
+  return(pb_mat);
+}
+
+// [[Rcpp::export]]
+arma::mat find_PB_using_pc_recursively(arma::mat& X){
+  int K = X.n_cols;
+
+  arma::mat pb_mat = arma::zeros(K,K-1);
+
+  std::vector<Balance<MaximumVariance>> SOLS;
+  int pb_size = 0;
+  Balance<MaximumVariance> root = Balance<MaximumVariance>(X.n_cols);
+  optimise_recursively(root, X, pb_mat, &pb_size);
+
+
+  // Rcpp::Rcout << pb_size << std::endl;
+  return(pb_mat);
+}
+
+/*
+ *
+ *
+ *
+ */
+
+
+
+// [[Rcpp::export]]
+arma::mat find_PB_using_pc_recursively_forcing_parents(arma::mat& X){
+  arma::mat pb_mat = arma::zeros(X.n_cols,X.n_cols-1);
+
+  unsigned pb_i = 0;
+  int K = X.n_cols;
+  arma::mat S0 = cov(clr_coordinates(X));
+
+  pb_mat.col(0) = get_balance_using_pc(X);
+  arma::uvec left = find(pb_mat.col(0) < 0);
+  arma::uvec right = find(pb_mat.col(0) > 0);
+  if(left.n_elem > 1){
+    if(left.n_elem == 2){
+      arma::vec balance = arma::zeros(K);
+      balance[left(0)] = -SQR2DIV2;
+      balance[left(1)] = +SQR2DIV2;
+      pb_mat.col(++pb_i) = balance;
+    }else{
+      arma::mat Xsub = arma::mat(X.n_rows, left.n_elem);
+      for(unsigned i = 0; i < left.n_elem; i++) Xsub.col(i) = X.col(left(i));
+
+      unsigned new_cols = left.n_elem - 1;
+      arma::ucolvec inew_cols = arma::ucolvec(new_cols);
+      for(unsigned i = 0; i < new_cols; i++) inew_cols(i) = 1+pb_i + i;
+      pb_mat.submat(left, inew_cols) = find_PB_using_pc_recursively_forcing_parents(Xsub);
+      pb_i+=new_cols;
+    }
+  }
+
+  if(right.n_elem > 1){
+    if(right.n_elem == 2){
+      arma::vec balance = arma::zeros(K);
+      balance[right(0)] = -SQR2DIV2;
+      balance[right(1)] = +SQR2DIV2;
+      pb_mat.col(++pb_i) = balance;
+    }else{
+      arma::mat Xsub = arma::mat(X.n_rows, right.n_elem);
+      for(unsigned i = 0; i < right.n_elem; i++) Xsub.col(i) = X.col(right(i));
+
+      unsigned new_cols = right.n_elem - 1;
+      arma::ucolvec inew_cols = arma::ucolvec(new_cols);
+      for(unsigned i = 0; i < new_cols; i++) inew_cols(i) = 1+pb_i + i;
+      pb_mat.submat(right, inew_cols) = find_PB_using_pc_recursively_forcing_parents(Xsub);
+      pb_i+=new_cols;
+    }
+  }
+
+  arma::uvec zeros = find( pb_mat.col(0) == 0 );
+  arma::uvec no_zeros = find( pb_mat.col(0) != 0 );
 
   arma::vec bal = arma::zeros(K);
-  bal(iL).fill(1/nL * sqrt(nL*nR/(nL+nR)));
-  bal(iR).fill(-1/nR * sqrt(nL*nR/(nL+nR)));
-  return(bal);
-}
 
-// [[Rcpp::export]]
-arma::mat find_PB_rnd_local_search(arma::mat M, int rep = 1){
-  int K = M.n_cols;
-  std::vector<SBP> PB;
-  std::vector<SBP> SOLS;
 
-  SOLS.push_back(SBP(M, default_node(K)));
-  SOLS.back().local_search(rep);
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
+  while( zeros.n_elem > 0 ){
+    double l = no_zeros.n_elem;
+    unsigned r = 0, bestR;
+    arma::uvec uR(K);
+    if(zeros.n_elem <= 2){
+      bestR = 1;
+      bal(no_zeros).fill(-1.0/l * sqrt(l/(l+1)));
+      bal(zeros.head(1)).fill(sqrt(l/(l+1)));  // When zeros.n_elem == 2 the decision is arbitrary.
+    }else{
+      arma::vec eigval;
+      arma::mat eigvec;
+      arma::mat Xsub = arma::mat(X.n_rows, zeros.n_elem);
+      for(int i = 0; i < zeros.n_elem; i++) Xsub.col(i) = X.col(zeros[i]);
+      arma::mat S = arma::cov(clr_coordinates(Xsub));
+      eig_sym( eigval, eigvec, S);
+
+      arma::vec V = eigvec.tail_cols(1);
+      arma::uvec ord;
+      if( fabs(min(V)) >= max(V) ){
+        ord = sort_index(V, "ascend");
+      }else{
+        ord = sort_index(V, "descend");
+      }
+
+      double bestScore = -1;
+      for(unsigned i = 0; arma::as_scalar(V(ord[0])) * arma::as_scalar(V(ord[i])) > 0; i++){
+        uR(r++) = zeros[ord[i]];
+
+        bal(no_zeros).fill(-1.0/l * sqrt((double)l*r/(l+r)));
+        bal(uR.head(r)).fill(+1.0/r * sqrt((double)l*r/(l+r)));
+        double score = as_scalar(bal.t() * S0 * bal);
+        // double score = dot(V, bal);
+        if(score > bestScore){
+          bestScore = score;
+          bestR = r;
+        }
+      }
+      bal.fill(0);
+      bal(no_zeros).fill(-1.0/l * sqrt((double)l*bestR/(l+bestR)));
+      for(unsigned i = 0; i < bestR; i++){
+        bal(uR(i)) = +1.0/bestR * sqrt((double)l*bestR/(l+bestR));
       }
     }
-    PB.push_back(SOLS[iBestSolution]);
-    //Rcpp::Rcout << "Best solution found" << std::endl;
-    //SOLS[iBestSolution].print_status(true,true,true);
+    zeros = find( bal == 0 );
+    no_zeros = find( bal != 0 );
 
-    //Rcpp::Rcout << "Status:" << SOLS.size() << std::endl;
-    //SOLS.back().print_status(true,true,true);
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    //Rcpp::Rcout << n << " " << nL << " " << nR << std::endl;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      //Rcpp::Rcout << "Including top... ";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      //Rcpp::Rcout << "Top included!" << std::endl;
-      //SOLS.back().print_status(true,true,true);
-      SOLS.back().local_search(rep);
-      //SOLS.back().print_status(true,true,true);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      //SOLS[1].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].left());
-      SOLS.back().local_search(rep);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      //SOLS[2].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].right());
-      SOLS.back().local_search(rep);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-    //SOLS.back().print_status(true,true,true);
+    pb_i++;
+    pb_mat.col( pb_i ) = bal;
 
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-  }
-  //Rcpp::Rcout << "End" << std::endl;
-  arma::mat pb_mat = arma::mat(K,PB.size());
-  for(unsigned int i=0; i<PB.size(); i++){
-    pb_mat.col(i) = balance(K,PB[i]);
-  }
-  return(pb_mat);
-  //Rcpp::Rcout << "Principal balances: "<< std::endl;
-  //print_list(PB);
-}
+    right = uR.head(bestR);
+    if(bestR > 1){
+      if(bestR == 2){
+        arma::vec balance = arma::zeros(K);
+        balance[uR(0)] = -SQR2DIV2;
+        balance[uR(1)] = +SQR2DIV2;
+        pb_mat.col(++pb_i) = balance;
+      }else{
+        arma::mat Xsub = arma::mat(X.n_rows, right.n_elem);
+        for(unsigned i = 0; i < right.n_elem; i++) Xsub.col(i) = X.col(right(i));
 
-arma::vec get_pc1(arma::mat M){
-  arma::vec b_old = arma::zeros<arma::vec>(M.n_cols);
-  arma::vec b_new = arma::ones<arma::vec>(M.n_cols);
-  int iter = 0;
-  while( (max(abs(b_old-b_new)) > 10e-5) & (iter < 1000) ){
-    iter++;
-    b_old = b_new;
-    b_new = normalise(M * b_old);
-  }
-  return(b_new);
-}
-arma::vec get_pc1_error(arma::mat M){
-  int k = M.n_rows;
-
-  arma::vec b = arma::ones<arma::vec>(k);
-  arma::vec b_old = arma::zeros<arma::vec>(k);
-  double mu_prev = 0, mu = 1;
-
-  while( std::abs(mu - mu_prev) > 0.001 ){
-    b = normalise(M * b);
-    mu_prev = mu;
-    mu = ((arma::mat)(b.t() * M * b))[0];
-  }
-
-  arma::mat inv_M = arma::mat(k, k);
-  arma::mat MuId = arma::zeros(k, k);
-  MuId.diag().fill(mu);
-
-  while( max(abs(b_old-b)) > 10e-10){
-    b_old = b;
-    b = normalise( inv(M - MuId) * b );
-    mu = ((arma::mat)(b.t() * M * b))(0,0);
-    MuId.diag().fill( mu );
-  }
-  return(b);
-}
-
-// [[Rcpp::export]]
-arma::mat find_PB_pc_local_search(arma::mat X){
-  arma::mat M = cov(log(X));
-
-  arma::mat Xclr = clr_coordinates(X);
-  arma::mat Mclr = cov(Xclr);
-  arma::vec PC1 = get_pc1(Mclr);
-
-  int K = M.n_cols;
-
-  std::vector<SBP> PB;
-  arma::mat pb_mat = arma::mat(K,K-1);
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-
-  SOLS.back().first_pc_local_search(PC1);
-  //print_list(SOLS);
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
+        unsigned new_cols = right.n_elem - 1;
+        arma::ucolvec inew_cols = arma::ucolvec(new_cols);
+        for(unsigned i = 0; i < new_cols; i++) inew_cols(i) = 1+pb_i + i;
+        pb_mat.submat(right, inew_cols) = find_PB_using_pc_recursively_forcing_parents(Xsub);
+        pb_i+=new_cols;
       }
     }
-    PB.push_back(SOLS[iBestSolution]);
-    // Rcpp::Rcout << "Best solution found" << std::endl;
-    // SOLS[iBestSolution].print_status(true,true,true);
 
-    pb_mat.col(l) = balance(K,PB[l]);
-    Xclr = Xclr - Xclr * pb_mat.col(l) * pb_mat.col(l).t();
-    Mclr = cov(Xclr);
-
-    arma::vec PC1 = get_pc1(Mclr);
-
-
-    //Rcpp::Rcout << "Status:" << SOLS.size() << std::endl;
-    //SOLS.back().print_status(true,true,true);
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    //Rcpp::Rcout << n << " " << nL << " " << nR << std::endl;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      //Rcpp::Rcout << "Including top... ";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      //Rcpp::Rcout << "Top included!" << std::endl;
-      //SOLS.back().print_status(true,true,true);
-      SOLS.back().first_pc_local_search(PC1);
-      //SOLS.back().print_status(true,true,true);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      //SOLS[1].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].left());
-      SOLS.back().first_pc_local_search(PC1);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      //SOLS[2].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].right());
-      SOLS.back().first_pc_local_search(PC1);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-    //SOLS.back().print_status(true,true,true);
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-
-    Rcpp::checkUserInterrupt();
   }
 
   return(pb_mat);
 }
 
-// [[Rcpp::export]]
-arma::mat find_PB_log(arma::mat lX){
-  arma::mat M = cov(lX);
 
-  int K = M.n_cols;
+/*** R
+SEED = round(1000*runif(1))
+set.seed(363)
+SEED
+D = 10
+X = matrix(rlnorm(100*D), ncol = D)
+sort(diag(cov(coordinates(X, find_PB(X)))), decreasing = TRUE)
+sort(diag(cov(coordinates(X, find_PB_using_pc(X)))), decreasing = TRUE)
+sort(diag(cov(coordinates(X, find_PB_using_pc_recursively(X)))), decreasing = TRUE)
+sort(diag(cov(coordinates(X, find_PB_using_pc_recursively_forcing_parents(X)))), decreasing = TRUE)
+*/
 
-  std::vector<SBP> PB;
-  arma::mat pb_mat = arma::mat(K,K-1);
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-
-  SOLS.back().optimal();
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
-      }
-    }
-    PB.push_back(SOLS[iBestSolution]);
-    // Rcpp::Rcout << "Best solution found" << std::endl;
-    // SOLS[iBestSolution].print_status(true,true,true);
-    pb_mat.col(l) = balance(K,PB[l]);
-
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      SOLS.back().optimal();
-      //SOLS.back().print_status(true,true,false);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      SOLS.push_back(SOLS[iBestSolution].left());
-      SOLS.back().optimal();
-      //SOLS.back().print_status(true,true,false);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      SOLS.push_back(SOLS[iBestSolution].right());
-      SOLS.back().optimal();
-      //SOLS.back().print_status(true,true,false);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-
-    Rcpp::checkUserInterrupt();
-  }
-
-  return(pb_mat);
-}
-
-// [[Rcpp::export]]
-arma::mat find_PB(arma::mat X){
-  arma::mat M = cov(log(X));
-
-  int K = M.n_cols;
-
-  std::vector<SBP> PB;
-  arma::mat pb_mat = arma::mat(K,K-1);
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-
-  SOLS.back().optimal();
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
-      }
-    }
-    PB.push_back(SOLS[iBestSolution]);
-    // Rcpp::Rcout << "Best solution found" << std::endl;
-    // SOLS[iBestSolution].print_status(true,true,true);
-    pb_mat.col(l) = balance(K,PB[l]);
-
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      SOLS.back().optimal();
-      //SOLS.back().print_status(true,true,false);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      SOLS.push_back(SOLS[iBestSolution].left());
-      SOLS.back().optimal();
-      //SOLS.back().print_status(true,true,false);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      SOLS.push_back(SOLS[iBestSolution].right());
-      SOLS.back().optimal();
-      //SOLS.back().print_status(true,true,false);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-
-    Rcpp::checkUserInterrupt();
-  }
-
-  return(pb_mat);
-}
-
-// [[Rcpp::export]]
-arma::mat find_PB2(arma::mat M, int random = 100, int optim = 0){
-  int K = M.n_cols;
-  std::vector<SBP> PB;
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-  SOLS.back().simulated_annealing(random, optim);
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
-      }
-    }
-    PB.push_back(SOLS[iBestSolution]);
-    //Rcpp::Rcout << "Best solution found" << std::endl;
-    //SOLS[iBestSolution].print_status(true,true,true);
-
-    //Rcpp::Rcout << "Status:" << SOLS.size() << std::endl;
-    //SOLS.back().print_status(true,true,true);
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    //Rcpp::Rcout << n << " " << nL << " " << nR << std::endl;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      //Rcpp::Rcout << "Including top... ";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      //Rcpp::Rcout << "Top included!" << std::endl;
-      //SOLS.back().print_status(true,true,true);
-      int random_scaled = (int)ceil(random * (double)(nL + nR)/K);
-      int optim_scaled =  (int)ceil(optim * (double)(nL + nR)/K);
-      SOLS.back().simulated_annealing(random_scaled , optim_scaled);
-      //SOLS.back().print_status(true,true,true);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      //SOLS[1].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].left());
-      int random_scaled = (int)ceil(random * (double)(nL)/K);
-      int optim_scaled =  (int)ceil(optim * (double)(nL)/K);
-      SOLS.back().simulated_annealing(random_scaled , optim_scaled);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      //SOLS[2].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].right());
-      int random_scaled = (int)ceil(random * (double)(nR)/K);
-      int optim_scaled =  (int)ceil(optim * (double)(nR)/K);
-      SOLS.back().simulated_annealing(random_scaled , optim_scaled);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-    //SOLS.back().print_status(true,true,true);
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-  }
-  //Rcpp::Rcout << "End" << std::endl;
-  arma::mat pb_mat = arma::mat(K,PB.size());
-  for(unsigned int i=0; i<PB.size(); i++){
-    pb_mat.col(i) = balance(K,PB[i]);
-  }
-  return(pb_mat);
-  //Rcpp::Rcout << "Principal balances: "<< std::endl;
-  //print_list(PB);
-}
-
-// [[Rcpp::export]]
-arma::mat find_PB3(arma::mat M, int steps, int random = 100, int optim = 0, int k = 0){
-  int K = M.n_cols;
-  if(k == 0) k = K;
-  std::vector<SBP> PB;
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-  SOLS.back().simulated_annealing2(steps, random, optim, k);
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
-      }
-    }
-    PB.push_back(SOLS[iBestSolution]);
-    //Rcpp::Rcout << "Best solution found" << std::endl;
-    //SOLS[iBestSolution].print_status(true,true,true);
-
-    //Rcpp::Rcout << "Status:" << SOLS.size() << std::endl;
-    //SOLS.back().print_status(true,true,true);
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    //Rcpp::Rcout << n << " " << nL << " " << nR << std::endl;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      //Rcpp::Rcout << "Including top... ";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      //Rcpp::Rcout << "Top included!" << std::endl;
-      //SOLS.back().print_status(true,true,true);
-      int random_scaled = (int)ceil(random * (double)(nL + nR)/K);
-      int optim_scaled =  (int)ceil(optim * (double)(nL + nR)/K);
-      SOLS.back().simulated_annealing2(steps, random_scaled , optim_scaled, k);
-      //SOLS.back().print_status(true,true,true);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      //SOLS[1].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].left());
-      int random_scaled = (int)ceil(random * (double)(nL)/K);
-      int optim_scaled =  (int)ceil(optim * (double)(nL)/K);
-      SOLS.back().simulated_annealing2(steps, random_scaled , optim_scaled, k);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      //SOLS[2].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].right());
-      int random_scaled = (int)ceil(random * (double)(nR)/K);
-      int optim_scaled =  (int)ceil(optim * (double)(nR)/K);
-      SOLS.back().simulated_annealing2(steps, random_scaled , optim_scaled, k);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-    //SOLS.back().print_status(true,true,true);
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-  }
-  //Rcpp::Rcout << "End" << std::endl;
-  arma::mat pb_mat = arma::mat(K,PB.size());
-  for(unsigned int i=0; i<PB.size(); i++){
-    pb_mat.col(i) = balance(K,PB[i]);
-  }
-  return(pb_mat);
-  //Rcpp::Rcout << "Principal balances: "<< std::endl;
-  //print_list(PB);
-}
-
-// [[Rcpp::export]]
-arma::mat find_PB4(arma::mat M){
-  int K = M.n_cols;
-
-  std::vector<SBP> PB;
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-  SOLS.back().first_component_approximation();
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
-      }
-    }
-    PB.push_back(SOLS[iBestSolution]);
-    //Rcpp::Rcout << "Best solution found" << std::endl;
-    //SOLS[iBestSolution].print_status(true,true,true);
-
-    //Rcpp::Rcout << "Status:" << SOLS.size() << std::endl;
-    //SOLS.back().print_status(true,true,true);
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    //Rcpp::Rcout << n << " " << nL << " " << nR << std::endl;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      //Rcpp::Rcout << "Including top... ";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      //Rcpp::Rcout << "Top included!" << std::endl;
-      //SOLS.back().print_status(true,true,true);
-      SOLS.back().first_component_approximation();
-      //SOLS.back().print_status(true,true,true);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      //SOLS[1].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].left());
-      SOLS.back().first_component_approximation();
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      //SOLS[2].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].right());
-      SOLS.back().first_component_approximation();
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-    //SOLS.back().print_status(true,true,true);
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-  }
-  //Rcpp::Rcout << "End" << std::endl;
-  arma::mat pb_mat = arma::mat(K,PB.size());
-  for(unsigned int i=0; i<PB.size(); i++){
-    pb_mat.col(i) = balance(K,PB[i]);
-  }
-  return(pb_mat);
-  //Rcpp::Rcout << "Principal balances: "<< std::endl;
-  //print_list(PB);
-}
-
-
-
-// [[Rcpp::export]]
-arma::mat find_PB5(arma::mat X){
-  arma::mat M = cov(log(X));
-
-  arma::mat Xclr = clr_coordinates(X);
-  arma::mat Mclr = cov(Xclr);
-
-  int K = M.n_cols;
-
-  std::vector<SBP> PB;
-  arma::mat pb_mat = arma::mat(K,K-1);
-  std::vector<SBP> SOLS;
-
-  SOLS.push_back(SBP(M, default_node(K)));
-
-  SOLS.back().first_component_approximation2(Mclr);
-  //print_list(SOLS);
-  for(int l=0;l<K-1;l++){
-    //Rcpp::Rcout << "Starting step " << l + 1 << " of " << K-1 << std::endl;
-    //print_list(SOLS);
-    double vBestSolution = 0;
-    int iBestSolution = -1;
-    for(unsigned int i =0; i< SOLS.size();i++){
-      double v = SOLS[i].var();
-      if(v > vBestSolution){
-        vBestSolution = v;
-        iBestSolution = i;
-      }
-    }
-    PB.push_back(SOLS[iBestSolution]);
-    // Rcpp::Rcout << "Best solution found" << std::endl;
-    // SOLS[iBestSolution].print_status(true,true,true);
-    pb_mat.col(l) = balance(K,PB[l]);
-    Xclr = Xclr - Xclr * pb_mat.col(l) * pb_mat.col(l).t();
-    Mclr = cov(Xclr);
-
-
-    //Rcpp::Rcout << "Status:" << SOLS.size() << std::endl;
-    //SOLS.back().print_status(true,true,true);
-    int n = SOLS[iBestSolution].get_n();
-    int nL = SOLS[iBestSolution].getL().n_elem;
-    int nR = SOLS[iBestSolution].getR().n_elem;
-    //Rcpp::Rcout << n << " " << nL << " " << nR << std::endl;
-    if(n > nL + nR){
-      //Rcpp:: Rcout << "Start top...";
-      //Rcpp::Rcout << "Including top... ";
-      SOLS.push_back(SOLS[iBestSolution].top());
-      //Rcpp::Rcout << "Top included!" << std::endl;
-      //SOLS.back().print_status(true,true,true);
-      SOLS.back().first_component_approximation2(Mclr);
-      //SOLS.back().print_status(true,true,true);
-      //Rcpp::Rcout << "End top" << std::endl;
-    }
-    if(nL > 1){
-      //Rcpp:: Rcout << "Start left..." << std::endl;
-      //SOLS[1].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].left());
-      SOLS.back().first_component_approximation2(Mclr);
-      //Rcpp::Rcout << "End left" << std::endl;
-    }
-    if(nR > 1){
-      //Rcpp:: Rcout << "Start right...";
-      //SOLS[2].print_status(true,true,true);
-      SOLS.push_back(SOLS[iBestSolution].right());
-      SOLS.back().first_component_approximation2(Mclr);
-      //Rcpp::Rcout << "End right" << std::endl;
-    }
-    //SOLS.back().print_status(true,true,true);
-
-    SOLS[iBestSolution] = SOLS.back();
-    SOLS.pop_back();
-
-    Rcpp::checkUserInterrupt();
-  }
-
-  return(pb_mat);
-}
-
-// Helpers
-std::map<int,arma::uvec> default_node(int size){
-  std::map<int,arma::uvec> node;
-  for(int i=0;i<size;i++){
-    node[i] = arma::uvec(1);
-    node[i][0] = i;
-  }
-  return(node);
-}
+// #endif
