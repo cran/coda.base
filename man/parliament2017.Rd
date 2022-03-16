@@ -4,7 +4,8 @@
 \name{parliament2017}
 \alias{parliament2017}
 \title{Results of catalan parliament elections in 2017 by regions.}
-\format{A data frame with 42 rows and 9 variables:
+\format{
+A data frame with 42 rows and 9 variables:
 \describe{
 \item{com}{Region}
 \item{cs}{Votes to Ciutadans party}
@@ -15,9 +16,10 @@
 \item{cup}{Votes to Candidatura d'unitat popular party}
 \item{pp}{Votes to Partit popular party}
 \item{other}{Votes to other parties}
-}}
+}
+}
 \source{
-\url{http://www.idescat.cat/tema/elecc}
+\url{https://www.idescat.cat/tema/elecc}
 }
 \usage{
 parliament2017

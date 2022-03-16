@@ -12,8 +12,9 @@ getDim = function(X) ifelse(is.vector(X), length(X), NCOL(X))
 #' variation_array(X, only_variation = TRUE)
 #' @export
 variation_array = function(X, only_variation = FALSE){
-  X = as.matrix(X)
-  c_variation_array(X, as.logical(only_variation))
+  var_arr = c_variation_array(as.matrix(X), as.logical(only_variation))
+  if(!is.null(colnames(X))) colnames(var_arr) = rownames(var_arr) = colnames(X)
+  var_arr
 }
 
 
@@ -58,42 +59,94 @@ cdp_partition = function(ncomp) unname(t(fillPartition(matrix(0, nrow = 1, ncol 
 
 alr = function(X, basis_return){
   COORD = alr_coordinates(X, ncol(X))
-  if(basis_return) attr(COORD, 'basis') = alr_basis(ncol(X))
+  colnames(COORD) = paste0('alr', 1:ncol(COORD))
+  if(basis_return){
+    B = alr_basis(ncol(X))
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
   COORD
 }
 
 ilr = function(X, basis_return){
   COORD = ilr_coordinates(X)
-  if(basis_return) attr(COORD, 'basis') = ilr_basis(ncol(X))
+  colnames(COORD) = paste0('ilr', 1:ncol(COORD))
+  if(basis_return){
+    B = ilr_basis(ncol(X))
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
   COORD
 }
 
 clr = function(X, basis_return){
   COORD = clr_coordinates(X)
-  if(basis_return) attr(COORD, 'basis') = clr_basis(ncol(X))
+  colnames(COORD) = paste0('clr', 1:ncol(COORD))
+  if(basis_return){
+    B = clr_basis(ncol(X))
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
   COORD
 }
 
 pc = function(X, basis_return){
-  lX =  log(X)
-  SVD = svd(scale(lX - rowMeans(lX), scale = FALSE))
-  B = SVD$v[,-ncol(SVD$v)]
+  B = ilr_basis(ncol(X))
+  B = B %*% svd(scale(log(X) %*% B, scale=FALSE))$v
   COORD = matrix_coordinates(X, B)
-  if(basis_return) attr(COORD, 'basis') = B
+  colnames(COORD) = paste0('pc', 1:ncol(B))
+  if(basis_return){
+    colnames(B) = paste0('pc', 1:ncol(B))
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
   COORD
 }
 
 cdp = function(X, basis_return){
   B = cdp_basis(ncol(X))
   COORD = matrix_coordinates(X, B)
-  if(basis_return) attr(COORD, 'basis') = B
+  colnames(COORD) = colnames(B)
+  if(basis_return){
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
   COORD
 }
 
 pb = function(X, basis_return){
   B = pb_basis(X, method = 'exact')
   COORD = matrix_coordinates(X, B)
-  if(basis_return) attr(COORD, 'basis') = B
+  colnames(COORD) = colnames(B)
+  if(basis_return){
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
+  COORD
+}
+
+pw = function(X, basis_return){
+  B = pairwise_basis(ncol(X))
+  COORD = matrix_coordinates(X, B)
+  colnames(COORD) = colnames(B)
+  if(basis_return){
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
   COORD
 }
 
@@ -105,14 +158,13 @@ pb = function(X, basis_return){
 #' @details
 #' \code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
 #' used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
-#' log-contrast: 'alr' 'clr', 'ilr', 'pc', 'pb' and 'cdp', for the additive log-ratio, centered log-ratio, isometric log-ratio,
-#' clr principal components, clr principal balances or default's CoDaPack balances respectively.
+#' log-contrast: 'alr' 'clr', 'ilr', 'pw', 'pc', 'pb' and 'cdp', for the additive log-ratio, centered log-ratio, isometric log-ratio,
+#' pairwise log-ratio, clr principal components, clr principal balances or default's CoDaPack balances respectively.
 #'
 #' @param X compositional dataset. Either a matrix, a data.frame or a vector
 #' @param basis basis used to calculate the coordinates. \code{basis} can be either a string or a matrix.
-#' Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pc', 'pb' and 'cdp'. If \code{basis} is a matrix, it is expected
+#' Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pw', 'pc', 'pb' and 'cdp'. If \code{basis} is a matrix, it is expected
 #' to have log-ratio basis given in columns.
-#' @param label name given to the coordinates
 #' @param basis_return Should the basis be returned as attribute? (default: \code{TRUE})
 #'
 #' @return
@@ -125,30 +177,35 @@ pb = function(X, basis_return){
 #' a compositions from given coordinates.
 #' @examples
 #' coordinates(c(1,2,3,4,5))
+#' h = coordinates(c(1,2,3,4,5))
+#' basis(h)
 #' # basis is shown if 'coda.base.basis' option is set to TRUE
 #' options('coda.base.basis' = TRUE)
 #' coordinates(c(1,2,3,4,5))
-#' # Default transformation improves performance.
+#' # Default transformation can improve performance.
 #' N = 100
 #' K = 1000
 #' X = matrix(exp(rnorm(N*K)), nrow=N, ncol=K)
 #' system.time(coordinates(X, alr_basis(K)))
 #' system.time(coordinates(X, 'alr'))
 #' @export
-coordinates = function(X, basis = 'ilr', label = ifelse(is.character(basis), basis, 'h'),
-                       basis_return = TRUE){
+coordinates = function(X, basis = 'ilr', basis_return = TRUE){
   if(is.matrix(X)){
-    if(is.character(basis)){
+    if(is.character(basis)){   # default's basis with characters
       COORD = get(basis)(X, basis_return)
-    }else{
+      #sprintf(sprintf('%s%%0%dd', basis, 1+floor(log(ncol(COORD), 10))),1:ncol(COORD))
+    }else{                      # matrix basis
       COORD = matrix_coordinates(X, basis)
       if(basis_return) attr(COORD, 'basis') = basis
+      if(!is.null(colnames(basis))){
+        colnames(COORD) = colnames(basis)
+      }else{
+        colnames(COORD) = sprintf("h%d", 1:ncol(COORD))
+      }
     }
-    colnames(COORD) = sprintf(sprintf('%s%%0%dd', label, 1+floor(log(ncol(COORD), 10))),1:ncol(COORD))
   }else{
-
     if(is.atomic(X) & !is.list(X)){ # vector
-      COORD = Recall(matrix(X, nrow = 1), basis, label, basis_return)
+      COORD = Recall(matrix(X, nrow = 1), basis, basis_return)
       B = attr(COORD, 'basis')
       COORD = COORD[1,]
       attr(COORD, 'basis') = B
@@ -156,7 +213,7 @@ coordinates = function(X, basis = 'ilr', label = ifelse(is.character(basis), bas
       class_type = class(X)
 
       if(inherits(X, 'data.frame')){
-        mCOORD = Recall(as.matrix(X), basis, label, basis_return)
+        mCOORD = Recall(as.matrix(X), basis, basis_return)
         COORD = as.data.frame(mCOORD)
         attr(COORD, 'basis') = attr(mCOORD, 'basis')
       }
@@ -165,9 +222,13 @@ coordinates = function(X, basis = 'ilr', label = ifelse(is.character(basis), bas
     }
 
   }
+  suppressWarnings(row.names(COORD) <- row.names(X))
   set.coda(COORD)
 }
 
+#' @rdname coordinates
+#' @export
+coord = coordinates
 
 #' Get composition from coordinates w.r.t.  an specific basis
 #'
@@ -186,6 +247,7 @@ coordinates = function(X, basis = 'ilr', label = ifelse(is.character(basis), bas
 #' coordinates of a given composition.
 #' @export
 composition = function(H, basis = NULL, label = 'x', sparse_basis = FALSE){
+  rnames = rownames(H)
   class_type = class(H)
   if(is.null(basis) & "basis" %in% names(attributes(H))){
     basis = attr(H, 'basis')
@@ -249,6 +311,10 @@ composition = function(H, basis = NULL, label = 'x', sparse_basis = FALSE){
   #attr(RAW, 'basis') = basis
   RAW
 }
+
+#' @rdname composition
+#' @export
+comp = composition
 
 #' Distance Matrix Computation (including Aitchison distance)
 #'

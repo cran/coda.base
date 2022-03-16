@@ -37,6 +37,8 @@ ilr_basis = function(dim, type = 'default'){
   if(type == 'pivot'){
     return((-B)[,ncol(B):1, drop = FALSE][nrow(B):1,])
   }
+  colnames(B) = sprintf("ilr%d", 1:ncol(B))
+  rownames(B) = sprintf("c%d", 1:nrow(B))
   B
 }
 
@@ -59,7 +61,10 @@ ilr_basis = function(dim, type = 'default'){
 #' sum(clr_coordinates) < 1e-15
 #' @export
 clr_basis = function(dim){
-  clr_basis_default(dim)
+  B = clr_basis_default(dim)
+  colnames(B) = sprintf("clr%d", 1:ncol(B))
+  rownames(B) = sprintf("c%d", 1:nrow(B))
+  B
 }
 
 
@@ -91,7 +96,10 @@ alr_basis = function(dim, denominator = dim, numerator = which(denominator != 1:
     res[c(denominator, dim),] = res[c(dim, denominator),, drop = FALSE]
     res[,c(denominator, dim)] = res[,c(dim, denominator), drop = FALSE]
   }
-  res[,numerator, drop = FALSE]
+  B = res[,numerator, drop = FALSE]
+  colnames(B) = sprintf("alr%d", 1:ncol(B))
+  rownames(B) = sprintf("c%d", 1:nrow(B))
+  B
 }
 
 #' Isometric log-ratio basis based on Principal Components.
@@ -103,10 +111,15 @@ alr_basis = function(dim, denominator = dim, numerator = which(denominator != 1:
 #'
 #' @export
 pc_basis = function(X){
-  X = as.matrix(X)
-  lX =  log(X)
-  SVD = svd(scale(lX - rowMeans(lX), scale = FALSE))
-  B = SVD$v[,-ncol(X), drop = FALSE]
+  B = ilr_basis(ncol(X))
+  B = B %*% svd(scale(log(as.matrix(X)) %*% B, scale=FALSE))$v
+
+  parts = colnames(X)
+  if(is.null(parts)){
+    parts = paste0('c', 1:nrow(B))
+  }
+  rownames(B) = parts
+  colnames(B) = paste0('pc', 1:ncol(B))
   B
 }
 
@@ -123,7 +136,14 @@ cc_basis = function(Y, X){
   X = cbind(X)
   B = ilr_basis(ncol(Y))
   cc = stats::cancor(coordinates(Y), X)
-  B %*% cc$xcoef
+  B = B %*% cc$xcoef
+  parts = colnames(Y)
+  if(is.null(parts)){
+    parts = paste0('c', 1:nrow(B))
+  }
+  rownames(B) = parts
+  colnames(B) = paste0('cc', 1:ncol(B))
+  B
 }
 
 #' Balance generated from the first canonical correlation component
@@ -317,13 +337,16 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
   }
   if(method %in% c('constrained', 'exact')){
     if(method == 'exact'){
+      M = 'PB'
       B = find_PB(X)
     }
     if(method == 'constrained'){
+      M = 'CS'
       # B = t(fBalChip(X)$bal)
       B = find_PB_using_pc_recursively_forcing_parents(X)
     }
     if(method == 'constrained2'){
+      M = 'CS'
       B = find_PB_using_pc(X)
     }
     # if(method == 'lsearch'){
@@ -334,6 +357,7 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
     #   }
     # }
   }else if(method == 'cluster'){
+    M = 'CL'
     # Passing arguments to hclust function
     hh = stats::hclust(stats::as.dist(variation_array(X, only_variation = TRUE)), method=cluster.method, ...)
     B = matrix(0, ncol = nrow(hh$merge), nrow = ncol(X))
@@ -370,6 +394,12 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
   if(ordering){
     B = B[,order(apply(coordinates(X, B, basis_return = FALSE), 2, stats::var), decreasing = TRUE), drop = FALSE]
   }
+  parts = colnames(X)
+  if(is.null(parts)){
+    parts = paste0('c', 1:nrow(B))
+  }
+  rownames(B) = parts
+  colnames(B) = paste0('pb', 1:ncol(B))
   B
 }
 
@@ -381,7 +411,10 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
 #' @return matrix
 #' @export
 cdp_basis = function(dim){
-  cdp_basis_(dim)
+  B = cdp_basis_(dim)
+  rownames(B) = paste0("c", 1:dim)
+  colnames(B) = paste0("ilr", 1:ncol(B))
+  B
 }
 
 cdp_basis_ = function(dim, wR = 1:ceiling(dim/2), wL = ceiling(dim/2) + 1:floor(dim/2)){
@@ -405,4 +438,23 @@ cdp_basis_ = function(dim, wR = 1:ceiling(dim/2), wL = ceiling(dim/2) + 1:floor(
   cbind(v,
         Recall(dim, wR = wR[1:ceiling(R/2)], wL = wR[ceiling(R/2) + 1:floor(R/2)]),
         Recall(dim, wR = wL[1:ceiling(L/2)], wL = wL[ceiling(L/2) + 1:floor(L/2)]))
+}
+
+#' Pairwise log-ratio generator system
+#'
+#' The function returns all combinations of pairs of log-ratios.
+#'
+#' @param dim dimension to build the pairwise log-ratio generator system
+#' @return matrix
+#' @export
+pairwise_basis = function(dim){
+  I = utils::combn(dim,2)
+  B = apply(I, 2, function(i){
+    b = rep(0, dim)
+    b[i] = c(1,-1)
+    b
+  })
+  colnames(B) = paste0('alr.', apply(I, 2, paste, collapse = '_'))
+  rownames(B) = paste0("c", 1:dim)
+  B
 }

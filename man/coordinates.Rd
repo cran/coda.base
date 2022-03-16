@@ -2,23 +2,19 @@
 % Please edit documentation in R/coordinates.R
 \name{coordinates}
 \alias{coordinates}
+\alias{coord}
 \title{Get coordinates from compositions w.r.t. an specific basis}
 \usage{
-coordinates(
-  X,
-  basis = "ilr",
-  label = ifelse(is.character(basis), basis, "h"),
-  basis_return = TRUE
-)
+coordinates(X, basis = "ilr", basis_return = TRUE)
+
+coord(X, basis = "ilr", basis_return = TRUE)
 }
 \arguments{
 \item{X}{compositional dataset. Either a matrix, a data.frame or a vector}
 
 \item{basis}{basis used to calculate the coordinates. \code{basis} can be either a string or a matrix.
-Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pc', 'pb' and 'cdp'. If \code{basis} is a matrix, it is expected
+Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pw', 'pc', 'pb' and 'cdp'. If \code{basis} is a matrix, it is expected
 to have log-ratio basis given in columns.}
-
-\item{label}{name given to the coordinates}
 
 \item{basis_return}{Should the basis be returned as attribute? (default: \code{TRUE})}
 }
@@ -31,15 +27,17 @@ Calculate the coordinates of a composition with respect a given basis
 \details{
 \code{coordinates} function calculates the coordinates of a compositiona w.r.t. a given basis. `basis` parameter is
 used to set the basis, it can be either a matrix defining the log-contrasts in columns or a string defining some well-known
-log-contrast: 'alr' 'clr', 'ilr', 'pc', 'pb' and 'cdp', for the additive log-ratio, centered log-ratio, isometric log-ratio,
-clr principal components, clr principal balances or default's CoDaPack balances respectively.
+log-contrast: 'alr' 'clr', 'ilr', 'pw', 'pc', 'pb' and 'cdp', for the additive log-ratio, centered log-ratio, isometric log-ratio,
+pairwise log-ratio, clr principal components, clr principal balances or default's CoDaPack balances respectively.
 }
 \examples{
 coordinates(c(1,2,3,4,5))
+h = coordinates(c(1,2,3,4,5))
+basis(h)
 # basis is shown if 'coda.base.basis' option is set to TRUE
 options('coda.base.basis' = TRUE)
 coordinates(c(1,2,3,4,5))
-# Default transformation improves performance.
+# Default transformation can improve performance.
 N = 100
 K = 1000
 X = matrix(exp(rnorm(N*K)), nrow=N, ncol=K)

@@ -2,9 +2,12 @@
 % Please edit documentation in R/coordinates.R
 \name{composition}
 \alias{composition}
+\alias{comp}
 \title{Get composition from coordinates w.r.t.  an specific basis}
 \usage{
 composition(H, basis = NULL, label = "x", sparse_basis = FALSE)
+
+comp(H, basis = NULL, label = "x", sparse_basis = FALSE)
 }
 \arguments{
 \item{H}{coordinates of a composition. Either a matrix, a data.frame or a vector}
