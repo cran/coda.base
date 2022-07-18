@@ -5,19 +5,14 @@
 \alias{comp}
 \title{Get composition from coordinates w.r.t.  an specific basis}
 \usage{
-composition(H, basis = NULL, label = "x", sparse_basis = FALSE)
+composition(H, basis = NULL)
 
-comp(H, basis = NULL, label = "x", sparse_basis = FALSE)
+comp(H, basis = NULL)
 }
 \arguments{
 \item{H}{coordinates of a composition. Either a matrix, a data.frame or a vector}
 
 \item{basis}{basis used to calculate the coordinates}
-
-\item{label}{name given to the coordinates}
-
-\item{sparse_basis}{Is the given matrix basis sparse? If TRUE calculation are carried
-taking into an account sparsity (default `FALSE`)}
 }
 \value{
 coordinates with respect the given basis

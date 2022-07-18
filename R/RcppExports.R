@@ -45,6 +45,10 @@ matrix_coordinates <- function(X, B) {
     .Call(`_coda_base_matrix_coordinates`, X, B)
 }
 
+sparse_coordinates <- function(X, B) {
+    .Call(`_coda_base_sparse_coordinates`, X, B)
+}
+
 coordinates_basis <- function(X, B, sparse = FALSE) {
     .Call(`_coda_base_coordinates_basis`, X, B, sparse)
 }
@@ -55,6 +59,10 @@ ilr_coordinates <- function(X) {
 
 inv_ilr_coordinates <- function(ilrX) {
     .Call(`_coda_base_inv_ilr_coordinates`, ilrX)
+}
+
+get_balance_using_pc <- function(X) {
+    .Call(`_coda_base_get_balance_using_pc`, X)
 }
 
 find_PB <- function(X) {

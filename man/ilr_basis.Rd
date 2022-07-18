@@ -2,7 +2,7 @@
 % Please edit documentation in R/basis.R
 \name{ilr_basis}
 \alias{ilr_basis}
-\title{Default Isometric log-ratio basis}
+\title{Isometric log-ratio basis for log-transformed compositions.}
 \usage{
 ilr_basis(dim, type = "default")
 }
@@ -15,10 +15,11 @@ ilr_basis(dim, type = "default")
 matrix
 }
 \description{
+By default the basis of the clr-given by Egozcue et al., 2013
 Build an isometric log-ratio basis for a composition with k+1 parts
 \deqn{h_i = \sqrt{\frac{i}{i+1}} \log\frac{\sqrt[i]{\prod_{j=1}^i x_j}}{x_{i+1}}}{%
 h[i] = \sqrt(i/(i+1)) ( log(x[1] \ldots x[i])/i - log(x[i+1]) )}
-for \eqn{i in 1\ldots k}.
+for \eqn{i \in 1\ldots k}.
 }
 \details{
 Modifying parameter type (pivot or cdp) other ilr basis can be generated

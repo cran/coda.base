@@ -1,3 +1,13 @@
+check_dim = function(dim){
+  if(!is.numeric(dim)){
+    stop("Dimension should be a number", call. = FALSE)
+  }
+  if(!dim>0){
+    stop("dimension should be positive", call. = FALSE)
+  }
+}
+
+
 #' @title Coordinates basis
 #'
 #' @description
@@ -10,12 +20,13 @@ basis = function(H){
   attr(H, 'basis')
 }
 
-#' Default Isometric log-ratio basis
+#' Isometric log-ratio basis for log-transformed compositions.
 #'
+#' By default the basis of the clr-given by Egozcue et al., 2013
 #' Build an isometric log-ratio basis for a composition with k+1 parts
 #' \deqn{h_i = \sqrt{\frac{i}{i+1}} \log\frac{\sqrt[i]{\prod_{j=1}^i x_j}}{x_{i+1}}}{%
 #' h[i] = \sqrt(i/(i+1)) ( log(x[1] \ldots x[i])/i - log(x[i+1]) )}
-#' for \eqn{i in 1\ldots k}.
+#' for \eqn{i \in 1\ldots k}.
 #'
 #'Modifying parameter type (pivot or cdp) other ilr basis can be generated
 #'
@@ -30,12 +41,14 @@ basis = function(H){
 #' ilr_basis(5)
 #' @export
 ilr_basis = function(dim, type = 'default'){
+  check_dim(dim)
   if(type == 'cdp'){
-    return(cdp_basis_(dim))
-  }
-  B = ilr_basis_default(dim)
-  if(type == 'pivot'){
-    return((-B)[,ncol(B):1, drop = FALSE][nrow(B):1,])
+    B = cdp_basis_(dim)
+  }else{
+    B = ilr_basis_default(dim)
+    if(type == 'pivot'){
+      B = (-B)[,ncol(B):1, drop = FALSE][nrow(B):1,]
+    }
   }
   colnames(B) = sprintf("ilr%d", 1:ncol(B))
   rownames(B) = sprintf("c%d", 1:nrow(B))
@@ -61,6 +74,7 @@ ilr_basis = function(dim, type = 'default'){
 #' sum(clr_coordinates) < 1e-15
 #' @export
 clr_basis = function(dim){
+  check_dim(dim)
   B = clr_basis_default(dim)
   colnames(B) = sprintf("clr%d", 1:ncol(B))
   rownames(B) = sprintf("c%d", 1:nrow(B))
@@ -90,6 +104,7 @@ clr_basis = function(dim){
 #' Monographs on Statistics and Applied Probability. Chapman & Hall Ltd., London (UK). 416p.
 #' @export
 alr_basis = function(dim, denominator = dim, numerator = which(denominator != 1:dim)){
+  check_dim(dim)
   res = alr_basis_default(dim)
   res = cbind(res, 0)
   if(dim != denominator){
@@ -120,7 +135,7 @@ pc_basis = function(X){
   }
   rownames(B) = parts
   colnames(B) = paste0('pc', 1:ncol(B))
-  B
+  as.matrix(B)
 }
 
 #' Isometric log-ratio basis based on canonical correlations
@@ -134,7 +149,7 @@ pc_basis = function(X){
 cc_basis = function(Y, X){
   Y = as.matrix(Y)
   X = cbind(X)
-  B = ilr_basis(ncol(Y))
+  B = ilr_basis_default(ncol(Y))
   cc = stats::cancor(coordinates(Y), X)
   B = B %*% cc$xcoef
   parts = colnames(Y)
@@ -293,6 +308,8 @@ sbp_basis = function(..., data = NULL, silent=F){
   RES
 }
 
+
+
 #' Isometric log-ratio basis based on Principal Balances.
 #'
 #' Exact method to calculate the principal balances of a compositional dataset. Different methods to approximate the principal balances of a compositional dataset are also included.
@@ -343,7 +360,7 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
     if(method == 'constrained'){
       M = 'CS'
       # B = t(fBalChip(X)$bal)
-      B = find_PB_using_pc_recursively_forcing_parents(X)
+      B = constrained_pb(as.matrix(X))
     }
     if(method == 'constrained2'){
       M = 'CS'
@@ -378,16 +395,6 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
       }
     }
     B = sbp_basis(B[,nrow(hh$merge):1, drop = FALSE])
-    # bin = hh$merge
-    # df = as.data.frame(X)
-    # names(df) = paste0('P.', 1:NCOL(df))
-    # nms = paste0('P',gsub('-','.', bin))
-    # dim(nms) = dim(bin)
-    # sbp = apply(nms, 1, paste, collapse='~')
-    # id = seq_along(sbp)
-    # sbp.exp = paste(sprintf("%s = %s ~ %s", paste0('P', id), nms[,1], nms[,2]),
-    #                 collapse=', ')
-    # B = eval(parse(text = sprintf("sbp_basis(%s,data=df)", sbp.exp)))[,rev(id), drop = FALSE]
   } else{
     stop(sprintf("Method %s does not exist", method))
   }
@@ -411,6 +418,7 @@ pb_basis = function(X, method, constrained.complete_up = FALSE, cluster.method =
 #' @return matrix
 #' @export
 cdp_basis = function(dim){
+  check_dim(dim)
   B = cdp_basis_(dim)
   rownames(B) = paste0("c", 1:dim)
   colnames(B) = paste0("ilr", 1:ncol(B))
@@ -448,13 +456,14 @@ cdp_basis_ = function(dim, wR = 1:ceiling(dim/2), wL = ceiling(dim/2) + 1:floor(
 #' @return matrix
 #' @export
 pairwise_basis = function(dim){
+  check_dim(dim)
   I = utils::combn(dim,2)
   B = apply(I, 2, function(i){
     b = rep(0, dim)
     b[i] = c(1,-1)
     b
   })
-  colnames(B) = paste0('alr.', apply(I, 2, paste, collapse = '_'))
+  colnames(B) = paste0('lr', apply(I, 2, paste, collapse = '_'))
   rownames(B) = paste0("c", 1:dim)
   B
 }

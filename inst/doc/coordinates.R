@@ -6,14 +6,15 @@ knitr::opts_chunk$set(
 
 ## ---- message=FALSE-----------------------------------------------------------
 library(coda.base)
-# By default basis is not shown, in this vignette we turn on basis showing.
-options('coda.base.basis' = TRUE)
 data('parliament2017')
 X = parliament2017[,c('erc','jxcat','psc','cs')]
 
 ## -----------------------------------------------------------------------------
 H1.alr = coordinates(X, basis = 'alr')
 head(H1.alr)
+
+## -----------------------------------------------------------------------------
+basis(H1.alr)
 
 ## -----------------------------------------------------------------------------
 alr_basis(dim = 4)
@@ -24,7 +25,7 @@ B.alr
 
 ## -----------------------------------------------------------------------------
 H2.alr = coordinates(X, basis = B.alr)
-head(H2.alr)
+basis(H2.alr)
 
 ## -----------------------------------------------------------------------------
 H.clr = coordinates(X, basis = 'clr')

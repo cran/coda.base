@@ -13,7 +13,7 @@ X = parliament2017[,-1]
 B1 = pb_basis(X, method = "exact")
 
 ## ---- fig.width=7.5, fig.height=4.5-------------------------------------------
-plot(B1)
+plot_balance(B1)
 
 ## -----------------------------------------------------------------------------
 apply(coordinates(X, B1), 2, var)
@@ -55,14 +55,14 @@ D
 
 ## ---- fig.width=7.5, fig.height=4.5-------------------------------------------
 B2 = pb_basis(X, method = 'cluster')
-plot(B2)
+plot_balance(B2)
 
 ## -----------------------------------------------------------------------------
 apply(coordinates(X, B2), 2, var)
 
 ## ---- fig.width=7.5, fig.height=4.5-------------------------------------------
 B3 = pb_basis(X, method = 'constrained')
-plot(B3)
+plot_balance(B3)
 
 ## -----------------------------------------------------------------------------
 apply(coordinates(X, B3), 2, var)

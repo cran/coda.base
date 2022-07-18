@@ -7,7 +7,7 @@
 \usage{
 coordinates(X, basis = "ilr", basis_return = TRUE)
 
-coord(X, basis = "ilr", basis_return = TRUE)
+coord(..., basis = "ilr")
 }
 \arguments{
 \item{X}{compositional dataset. Either a matrix, a data.frame or a vector}
@@ -17,6 +17,8 @@ Accepted values for strings are: 'ilr' (default), 'clr', 'alr', 'pw', 'pc', 'pb'
 to have log-ratio basis given in columns.}
 
 \item{basis_return}{Should the basis be returned as attribute? (default: \code{TRUE})}
+
+\item{...}{components of the compositional data}
 }
 \value{
 Coordinates of composition \code{X} with respect the given \code{basis}.

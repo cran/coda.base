@@ -1,3 +1,13 @@
+coda.base 0.4.3
+===============
+* center() and gmean() functions incorporated.
+
+coda.base 0.4.2
+===============
+* Pairwise default name changed to lr instead of alr.
+* Sparse matrices are used for logcontrast matrices of balances.
+* Problem with constrained principal balances detected and solved.
+
 coda.base 0.3.2 (Release date: 2022-03-13)
 ===============
 * `coord()` and `comp()` are included as a shorter names of `coordinates()` and `composition()`.
