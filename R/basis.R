@@ -145,7 +145,6 @@ pc_basis = function(X){
 #' @param X explanatory dataset
 #' @return matrix
 #'
-#' @export
 cc_basis = function(Y, X){
   Y = as.matrix(Y)
   X = cbind(X)
@@ -190,48 +189,63 @@ cbalance_approx = function(Y,X){
 }
 
 #' Isometric log-ratio basis based on Balances
+#'
 #' Build an \code{\link{ilr_basis}} using a sequential binary partition or
 #' a generic coordinate system based on balances.
 #'
-#' @param ... balances to consider
+#' @param sbp parts to consider in the numerator and the denominator. Can be
+#' defined either using a list of formulas setting parts (see examples) or using
+#' a matrix where each column define a balance. Positive values are parts in
+#' the numerator, negative values are parts in the denominator, zeros are parts
+#' not used to build the balance.
 #' @param data composition from where name parts are extracted
-#' @param silent inform about orthgonality
+#' @param fill should the balances be completed to become an orthonormal basis?
+#'  if the given balances are not orthonormal, the function will complete the
+#'  balance to become a basis.
+#' @param silent inform about orthogonality
 #' @return matrix
 #' @examples
 #' X = data.frame(a=1:2, b=2:3, c=4:5, d=5:6, e=10:11, f=100:101, g=1:2)
-#' sbp_basis(b1 = a~b+c+d+e+f+g,
-#'           b2 = b~c+d+e+f+g,
-#'           b3 = c~d+e+f+g,
-#'           b4 = d~e+f+g,
-#'           b5 = e~f+g,
-#'           b6 = f~g, data = X)
-#' sbp_basis(b1 = a~b,
-#'          b2 = b1~c,
-#'          b3 = b2~d,
-#'          b4 = b3~e,
-#'          b5 = b4~f,
-#'          b6 = b5~g, data = X)
+#' sbp_basis(list(b1 = a~b+c+d+e+f+g,
+#'                b2 = b~c+d+e+f+g,
+#'                b3 = c~d+e+f+g,
+#'                b4 = d~e+f+g,
+#'                b5 = e~f+g,
+#'                b6 = f~g), data = X)
+#' sbp_basis(list(b1 = a~b,
+#'                b2 = b1~c,
+#'                b3 = b2~d,
+#'                b4 = b3~e,
+#'                b5 = b4~f,
+#'                b6 = b5~g), data = X)
 #' # A non-orthogonal basis can also be calculated.
-#' sbp_basis(b1 = a+b+c~e+f+g,
-#'           b2 = d~a+b+c,
-#'           b3 = d~e+g,
-#'           b4 = a~e+b,
-#'           b5 = b~f,
-#'           b6 = c~g, data = X)
+#' sbp_basis(list(b1 = a+b+c~e+f+g,
+#'               b2 = d~a+b+c,
+#'               b3 = d~e+g,
+#'               b4 = a~e+b,
+#'               b5 = b~f,
+#'               b6 = c~g), data = X)
 #' @export
-sbp_basis = function(..., data = NULL, silent=F){
-  sbp = list(...)
-  if(is.null(data) & is.matrix(sbp[[1]])){
-    P = t(sbp[[1]])
-    df = as.data.frame(matrix(1, ncol(P), nrow = 1))
+sbp_basis = function(sbp, data = NULL, fill = FALSE, silent=FALSE){
+  if(is.null(data) & is.matrix(sbp)){
+    # P = t(sbp)
+    df = as.data.frame(matrix(1, nrow(sbp), nrow = 1))
+    if(!is.null(rownames(sbp))){
+      colnames(df) = rownames(sbp)
+    }
     str_to_frm = function(vec){
       frm = paste(stats::aggregate(nm ~ vec, subset(data.frame(nm = paste0('`',names(df), '`'), vec = -1 * vec,
                                                                stringsAsFactors = FALSE), vec != 0),
                                    FUN = paste, collapse= ' + ')[['nm']], collapse=' ~ ')
       stats::as.formula(frm)
     }
-    return(do.call('sbp_basis', c(apply(P, 1, str_to_frm), list(data=df,
-                                                                silent = silent)))) #, envir = as.environment('package:coda.base')
+    return(sbp_basis(apply(sbp, 2, str_to_frm),
+                     data = df,
+                     fill = fill,
+                     silent = silent))
+    # return(do.call('sbp_basis', c(apply(P, 1, str_to_frm), list(data=df,
+                                                                # fill = fill,
+                                                                # silent = silent)))) #, envir = as.environment('package:coda.base')
   }
 
   if (!is.data.frame(data) && !is.environment(data) && ( (is.matrix(data) && !is.null(colnames(data))) | !is.null(attr(data, "class"))))
@@ -291,6 +305,9 @@ sbp_basis = function(..., data = NULL, silent=F){
     bal[balance[[2]]] = bal[balance[[2]]] + r
     bal
   })
+  if(fill){
+    return(Recall(fill_sbp(sign(RES))))
+  }
   if(!silent){
     if(qr(RES)$rank != NCOL(data)-1){
       warning('Given partition is not a basis')

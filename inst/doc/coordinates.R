@@ -80,28 +80,33 @@ B = matrix(c(-1,-1,2,0,
 H1.man = coordinates(X, basis = B)
 head(H1.man)
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  B.man = sbp_basis(b1 = erc~jxcat,
-#                    b2 = psc~cs,
-#                    b3 = erc+jxcat~psc+cs,
-#                    data=X)
-#  H2.man = coordinates(X, basis = B.man)
-#  head(H2.man)
+## -----------------------------------------------------------------------------
+B.man = sbp_basis(list(b1 = erc~jxcat,
+                       b2 = psc~cs,
+                       b3 = erc+jxcat~psc+cs), 
+                  data=X)
+H2.man = coordinates(X, basis = B.man)
+head(H2.man)
 
 ## -----------------------------------------------------------------------------
-B = sbp_basis(b1 = erc+jxcat~psc+cs, 
+B = sbp_basis(list(b1 = erc+jxcat~psc+cs), 
               data=X)
 H3.man = coordinates(X, basis = B)
 head(H3.man)
 
 ## -----------------------------------------------------------------------------
-B = sbp_basis(b1 = erc~jxcat+psc~cs, 
-              b2 = jxcat~erc+psc+cs,
-              b3 = psc~erc+jxcat+cs,
-              b4 = cs~erc+jxcat+psc,
+B = sbp_basis(list(b1 = erc~jxcat+psc~cs, 
+                   b2 = jxcat~erc+psc+cs,
+                   b3 = psc~erc+jxcat+cs,
+                   b4 = cs~erc+jxcat+psc),
               data=X)
 H4.man = coordinates(X, basis = B)
 head(H4.man)
+
+## -----------------------------------------------------------------------------
+B = sbp_basis(list(b1 = erc+jxcat~psc), 
+              data=X, fill = TRUE)
+sign(B)
 
 ## -----------------------------------------------------------------------------
 P =  matrix(c(1, 1,-1,-1,
