@@ -3,16 +3,16 @@ getDim = function(X) ifelse(is.vector(X), length(X), NCOL(X))
 #' Variation array is returned.
 #'
 #' @param X Compositional dataset
-#' @param only_variation if TRUE only the variation matrix is calculated
+#' @param include_means if TRUE logratio means are included in the lower-left triangle
 #' @return variation array matrix
 #' @examples
 #' set.seed(1)
 #' X = matrix(exp(rnorm(5*100)), nrow=100, ncol=5)
 #' variation_array(X)
-#' variation_array(X, only_variation = TRUE)
+#' variation_array(X, include_means = TRUE)
 #' @export
-variation_array = function(X, only_variation = FALSE){
-  var_arr = c_variation_array(as.matrix(X), as.logical(only_variation))
+variation_array = function(X, include_means = FALSE){
+  var_arr = c_variation_array(as.matrix(X), as.logical(include_means))
   if(!is.null(colnames(X))) colnames(var_arr) = rownames(var_arr) = colnames(X)
   var_arr
 }

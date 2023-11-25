@@ -4,7 +4,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ---- message=FALSE-----------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 library(coda.base)
 data('parliament2017')
 X = parliament2017[,c('erc','jxcat','psc','cs')]
@@ -39,7 +39,7 @@ head(H1.ilr)
 all.equal( coordinates(X, basis = 'ilr'),
            H1.ilr )
 
-## ---- fig.width=5.5, fig.height=4, fig.align='center', caption='Variance of principal components coordinates'----
+## ----fig.width=5.5, fig.height=4, fig.align='center', caption='Variance of principal components coordinates'----
 H2.ilr = coordinates(X, basis = 'pc')
 head(H2.ilr)
 barplot(apply(H2.ilr, 2, var))
@@ -47,7 +47,7 @@ barplot(apply(H2.ilr, 2, var))
 ## -----------------------------------------------------------------------------
 cov(H2.ilr)
 
-## ---- fig.width=5.5, fig.height=4, fig.align='center', caption='Variance of principal balances coordinates'----
+## ----fig.width=5.5, fig.height=4, fig.align='center', caption='Variance of principal balances coordinates'----
 H3.ilr = coordinates(X, basis = 'pb')
 head(H3.ilr)
 barplot(apply(H3.ilr, 2, var))

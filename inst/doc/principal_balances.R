@@ -12,13 +12,13 @@ X = parliament2017[,-1]
 ## -----------------------------------------------------------------------------
 B1 = pb_basis(X, method = "exact")
 
-## ---- fig.width=7.5, fig.height=4.5-------------------------------------------
+## ----fig.width=7.5, fig.height=4.5--------------------------------------------
 plot_balance(B1)
 
 ## -----------------------------------------------------------------------------
 apply(coordinates(X, B1), 2, var)
 
-## ---- echo=FALSE, fig.width=7.5, fig.height=4.5, warning=FALSE----------------
+## ----echo=FALSE, fig.width=7.5, fig.height=4.5, warning=FALSE-----------------
 library(ggplot2)
 D = 10
 
@@ -50,24 +50,24 @@ ggplot(data=dplot) +
   theme_minimal()
 
 ## -----------------------------------------------------------------------------
-D = as.dist(variation_array(X, only_variation = TRUE))
+D = as.dist(variation_array(X))
 D
 
-## ---- fig.width=7.5, fig.height=4.5-------------------------------------------
+## ----fig.width=7.5, fig.height=4.5--------------------------------------------
 B2 = pb_basis(X, method = 'cluster')
 plot_balance(B2)
 
 ## -----------------------------------------------------------------------------
 apply(coordinates(X, B2), 2, var)
 
-## ---- fig.width=7.5, fig.height=4.5-------------------------------------------
+## ----fig.width=7.5, fig.height=4.5--------------------------------------------
 B3 = pb_basis(X, method = 'constrained')
 plot_balance(B3)
 
 ## -----------------------------------------------------------------------------
 apply(coordinates(X, B3), 2, var)
 
-## ---- eval=FALSE, echo=FALSE--------------------------------------------------
+## ----eval=FALSE, echo=FALSE---------------------------------------------------
 #  hc = hclust_dendrogram(B1)
 #  hcd = as.dendrogram(hc)
 #  dd = dendro_data(hcd)
@@ -160,7 +160,7 @@ apply(coordinates(X, B3), 2, var)
 #  names(l_nodes) = sapply(l_nodes, function(x) paste(sort(names(x$balance)[x$balance != 0]), collapse = '_'))
 #  l_nodes
 
-## ---- eval=FALSE, include=FALSE-----------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  library(coda.base)
 #  X = iris[,1:4]
 #  B = pb_basis(X, method = 'exact')
@@ -168,37 +168,37 @@ apply(coordinates(X, B3), 2, var)
 #  H = coordinates(X, B)
 #  apply(H, 2, var)
 
-## ---- eval = FALSE, include=FALSE---------------------------------------------
+## ----eval = FALSE, include=FALSE----------------------------------------------
 #  plot(H[,1], H[,2])
 
-## ---- eval=FALSE, include=FALSE-----------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  lX = split(X, iris$Species)
 #  m_ = lapply(lX, colMeans)
 #  s_ = lapply(lX, cov)
 #  S = cov(X)
 #  S_ = replicate(3, S, simplify = FALSE)
 
-## ---- eval=FALSE, include=FALSE-----------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  Prob = mapply(function(m,s){
 #    mvtnorm::dmvnorm(X, m, s)
 #  }, m_, S_)
 
-## ---- eval=FALSE, include=FALSE-----------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  B_1 = pb_basis(Prob, method = 'exact')
 #  H_1 = coordinates(Prob, B_1)
 #  plot(H_1, col = iris$Species)
 
-## ---- eval=FALSE, include=FALSE-----------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  B_2 = pc_basis(Prob)
 #  H_2 = coordinates(Prob, B_2)
 #  plot(-H_2, col = iris$Species)
 
-## ---- eval=FALSE, include=FALSE-----------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  library(fpc)
 #  dp = discrproj(X, iris$Species)
 #  plot(dp$proj[,1:2], col = iris$Species)
 
-## ---- eval=FALSE, echo=FALSE--------------------------------------------------
+## ----eval=FALSE, echo=FALSE---------------------------------------------------
 #  @article{cite-key,
 #  	Date-Added = {2020-06-13 08:44:39 +0000},
 #  	Date-Modified = {2020-06-13 08:44:39 +0000},

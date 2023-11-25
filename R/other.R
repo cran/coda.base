@@ -13,21 +13,31 @@ set.coda = function(x){
 #' @export
 print.coda = function(x, ..., basis = getOption('coda.base.basis')){
   x.print = x
-  print.methods.list = utils::methods('print')
-  orig_class = setdiff(class(x.print), 'coda')
-  class(x.print) = orig_class
-  print.method = stats::na.omit(match(paste0('print.',orig_class), print.methods.list))[1]
+  print.method = NA
   if(!basis) attr(x.print, 'basis') = NULL
+
+  if(is.matrix(x)){
+    class(x.print) = NULL
+  }else{
+    orig_class = setdiff(class(x.print), 'coda')
+    class(x.print) = orig_class
+
+    print.methods.list = utils::methods('print')
+    print.method = stats::na.omit(match(paste0('print.', orig_class), print.methods.list))[1]
+  }
+
   if(is.na(print.method)){
     print.default(x.print, ...)
   }else{
     utils::getAnywhere(print.methods.list[print.method])$objs[[1]](x.print, ...)
-    if(basis){
-      B = attr(x.print, 'basis')
-      cat(' Basis:\n')
-      print(B)
-    }
   }
+
+  if(basis){
+    B = attr(x.print, 'basis')
+    cat(' Basis:\n')
+    print(B)
+  }
+
 }
 
 #' Import data from a codapack workspace
@@ -36,6 +46,10 @@ print.coda = function(x, ..., basis = getOption('coda.base.basis')){
 #' @param fname cdp file name
 #' @export
 read_cdp = function(fname){
+  jsonlite_available = requireNamespace("jsonlite")
+  if(!jsonlite_available){
+    stop("To import CoDaPack's workspace, jsonlite package must be installed.")
+  }
   file = jsonlite::read_json(fname)
   ldat = lapply(file$dataframes, function(df){
     vars = df$variables

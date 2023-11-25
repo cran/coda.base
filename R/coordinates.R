@@ -24,6 +24,19 @@ ilr = function(X, basis_return){
   COORD
 }
 
+olr = function(X, basis_return){
+  COORD = coordinates(X, ilr_basis(ncol(X)))
+  colnames(COORD) = paste0('olr', 1:ncol(COORD))
+  if(basis_return){
+    B = ilr_basis(ncol(X))
+    if(!is.null(colnames(X))){
+      rownames(B) = colnames(X)
+    }
+    attr(COORD, 'basis') = B
+  }
+  COORD
+}
+
 clr = function(X, basis_return){
   COORD = clr_coordinates(X)
   colnames(COORD) = paste0('clr', 1:ncol(COORD))
@@ -80,7 +93,7 @@ pb = function(X, basis_return){
 
 pw = function(X, basis_return){
   B = pairwise_basis(ncol(X))
-  COORD = sparse_coordinates(X, B)
+  COORD = sparse_coordinates(X, Matrix::Matrix(B, sparse = TRUE))
   colnames(COORD) = colnames(B)
   if(basis_return){
     if(!is.null(colnames(X))){
@@ -210,6 +223,30 @@ coord = function(..., basis = 'ilr'){
   # coordinates(a)
 }
 
+#' @rdname coordinates
+#' @export
+alr_c = function(X){
+  coordinates(X, 'alr', basis_return = FALSE)
+}
+
+#' @rdname coordinates
+#' @export
+clr_c = function(X){
+  coordinates(X, 'clr', basis_return = FALSE)
+}
+
+#' @rdname coordinates
+#' @export
+ilr_c = function(X){
+  coordinates(X, 'ilr', basis_return = FALSE)
+}
+
+#' @rdname coordinates
+#' @export
+olr_c = function(X){
+  coordinates(X, 'olr', basis_return = FALSE)
+}
+
 # #' Define a composition passing parts one by one.
 # #'
 # #' @param ... compositional dataset. Composition column names
@@ -243,14 +280,21 @@ composition = function(H, basis = NULL){
   rnames = rownames(H)
 
   class_type = class(H)
+  is_vector = is.atomic(H) & !is.list(H) & !is.matrix(H)
+  is_data_frame = inherits(H, 'data.frame')
+
   if(is.null(basis) & "basis" %in% names(attributes(H))){
     basis = attr(H, 'basis')
   }
   if(is.null(basis)){
-    stop("Basis is not defined", call. = FALSE)
+    warning("Basis is not defined, default basis is used", call. = FALSE)
+    if(is_vector){
+      basis = ilr_basis(length(H)+1)
+    }else{
+      basis = ilr_basis(ncol(H)+1)
+    }
   }
-  is_vector = is.atomic(H) & !is.list(H) & !is.matrix(H)
-  is_data_frame = inherits(H, 'data.frame')
+
 
   COORD = H
   if(is_vector){
@@ -302,6 +346,9 @@ composition = function(H, basis = NULL){
     RAW = as.data.frame(RAW)
   }
   class(RAW) = setdiff(class_type, 'coda')
+  if(is.matrix(RAW)){
+    class(RAW) = setdiff(class_type, c('matrix', 'array'))
+  }
   suppressWarnings(row.names(RAW) <- row.names(H))
   #attr(RAW, 'basis') = basis
   RAW
