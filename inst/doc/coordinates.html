@@ -12,7 +12,7 @@
 
 <meta name="author" content="Marc Comas-Cufí" />
 
-<meta name="date" content="2023-11-25" />
+<meta name="date" content="2025-05-02" />
 
 <title>Working with log-ratio coordinates in coda.base</title>
 
@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -62,7 +62,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -341,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Working with log-ratio coordinates in
 <code>coda.base</code></h1>
 <h4 class="author">Marc Comas-Cufí</h4>
-<h4 class="date">2023-11-25</h4>
+<h4 class="date">2025-05-02</h4>
 
 
 
@@ -374,54 +374,48 @@ to define an alr-coordinates is to set <code>basis=&#39;alr&#39;</code>:</p>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; 5  0.54918649 0.477309280 -0.1028807</span></span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.09742133 0.002856425 -0.6858265</span></span></code></pre></div>
 <p>It defines an alr-coordinates were the last part is used in the
-denominator. We can obtain the basis used to build the coordinates with
-function <code>basis()</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">basis</span>(H1.alr)</span>
+denominator. The basis used to build <code>H1.alr</code> can be obtained
+with the function <code>alr_bases()</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">alr_basis</span>(X)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt;       alr1 alr2 alr3</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; erc      1    0    0</span></span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; jxcat    0    1    0</span></span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; psc      0    0    1</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; cs      -1   -1   -1</span></span></code></pre></div>
-<p>The basis can be reproduced using the function
-<code>alr_basis</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">alr_basis</span>(<span class="at">dim =</span> <span class="dv">4</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt;    alr1 alr2 alr3</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; c1    1    0    0</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; c2    0    1    0</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; c3    0    0    1</span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; c4   -1   -1   -1</span></span></code></pre></div>
 <p>In fact, function <code>alr_basis</code> allows to define any type of
 alr-like coordinate by defining the numerator and the denominator:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>B.alr <span class="ot">=</span> <span class="fu">alr_basis</span>(<span class="at">dim =</span> <span class="dv">4</span>, <span class="at">numerator =</span> <span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">denominator =</span> <span class="dv">1</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>B.alr</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;    alr1 alr2 alr3</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; c1   -1   -1   -1</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; c2    0    1    0</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; c3    0    0    1</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; c4    1    0    0</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>B.alr <span class="ot">=</span> <span class="fu">alr_basis</span>(X, <span class="at">numerator =</span> <span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">denominator =</span> <span class="dv">1</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>B.alr</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;       alr1 alr2 alr3</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; erc     -1   -1   -1</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; jxcat    0    1    0</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; psc      0    0    1</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; cs       1    0    0</span></span></code></pre></div>
 <p>The log-contrast matrix can be used as <code>basis</code> parameter
 in <code>coordinates()</code> function:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>H2.alr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B.alr)</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">basis</span>(H2.alr)</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;    alr1 alr2 alr3</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; c1   -1   -1   -1</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; c2    0    1    0</span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; c3    0    0    1</span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; c4    1    0    0</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>H2.alr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B.alr)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">head</span>(H2.alr)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;          alr1        alr2       alr3</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.23864536  0.20785827 -0.9588371</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; 2  0.10388120  0.32073928 -0.9434918</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.36723896  0.17477121 -0.8993065</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.53209369  0.26638630 -1.0120078</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 5 -0.54918649 -0.07187721 -0.6520672</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 6  0.09742133  0.10027776 -0.5884051</span></span></code></pre></div>
 </div>
 <div id="the-centered-logratio-clr-coordinates" class="section level2">
 <h2>The centered logratio (clr) coordinates</h2>
 <p>Building centered log-ratio coordinates can be accomplished by
 setting parameter <code>basis=&#39;clr&#39;</code> or</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>H.clr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;clr&#39;</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">head</span>(H.clr)</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt;         clr1      clr2       clr3         clr4</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; 1 0.24740605 0.4552643 -0.7114311  0.008760689</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; 2 0.12971783 0.4504571 -0.8137740  0.233599031</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; 3 0.27294355 0.4477148 -0.6263629 -0.094295406</span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; 4 0.31942879 0.5858151 -0.6925790 -0.212664904</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; 5 0.31828271 0.2464055 -0.3337844 -0.230903777</span></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; 6 0.09767651 0.1979543 -0.4907286  0.195097842</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>H.clr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;clr&#39;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">head</span>(H.clr)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;         clr1      clr2       clr3         clr4</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; 1 0.24740605 0.4552643 -0.7114311  0.008760689</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; 2 0.12971783 0.4504571 -0.8137740  0.233599031</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; 3 0.27294355 0.4477148 -0.6263629 -0.094295406</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; 4 0.31942879 0.5858151 -0.6925790 -0.212664904</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; 5 0.31828271 0.2464055 -0.3337844 -0.230903777</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; 6 0.09767651 0.1979543 -0.4907286  0.195097842</span></span></code></pre></div>
 </div>
 <div id="the-isometric-logratio-ilr-coordinates" class="section level2">
 <h2>The isometric logratio (ilr) coordinates</h2>
@@ -432,95 +426,95 @@ coordinates (default’s <a href="https://imae.udg.edu/codapack/">CoDaPack</a>�
 <p>The default ilr coordinate used by <code>coda.base</code> are
 accessible by simply calling function <code>coordinates</code> without
 parameters:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>H1.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X)</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">head</span>(H1.ilr)</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt;          ilr1      ilr2        ilr3</span></span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.14697799 0.8677450 -0.01011597</span></span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; 2 -0.22679692 0.9012991 -0.26973693</span></span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.12358191 0.8056307  0.10888296</span></span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.18836356 0.9350526  0.24556428</span></span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; 5  0.05082486 0.5030669  0.26662472</span></span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.07090708 0.5213690 -0.22527958</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>H1.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">head</span>(H1.ilr)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt;          ilr1      ilr2        ilr3</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.14697799 0.8677450 -0.01011597</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; 2 -0.22679692 0.9012991 -0.26973693</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.12358191 0.8056307  0.10888296</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.18836356 0.9350526  0.24556428</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; 5  0.05082486 0.5030669  0.26662472</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.07090708 0.5213690 -0.22527958</span></span></code></pre></div>
 <p>Parameter <code>basis</code> is set to <code>ilr</code> by
 default:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">all.equal</span>( <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;ilr&#39;</span>),</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>           H1.ilr )</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">all.equal</span>( <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;ilr&#39;</span>),</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>           H1.ilr )</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div id="other-ilr-coordinates-principal-components-and-principal-balances" class="section level2">
 <h2>Other ilr-coordinates: Principal Components and Principal
 balances</h2>
 <p>Other easily accessible coordinates are the Principal Component (PC)
 coordinates. PC coordinates define the first coordinate as the
-log-contrast with highest variance, the second the one independent from
-the first and with highest variance and so on:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>H2.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;pc&#39;</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">head</span>(H2.ilr)</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt;          pc1         pc2       pc3</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.6787536  0.35694598 0.4319368</span></span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; 2 -0.5581520  0.57775877 0.5396259</span></span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.7013616  0.25302877 0.3467523</span></span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.8973701  0.25915667 0.3125234</span></span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; 5 -0.5362270 -0.05527103 0.1901418</span></span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.2676101  0.32802497 0.3852126</span></span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="fu">barplot</span>(<span class="fu">apply</span>(H2.ilr, <span class="dv">2</span>, var))</span></code></pre></div>
-<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+log-contrast with the highest variance, the second the one independent
+of the first and with the highest variance and so on:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>H2.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;pc&#39;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">head</span>(H2.ilr)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;          pc1         pc2       pc3</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.6787536  0.35694598 0.4319368</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; 2 -0.5581520  0.57775877 0.5396259</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.7013616  0.25302877 0.3467523</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.8973701  0.25915667 0.3125234</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; 5 -0.5362270 -0.05527103 0.1901418</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.2676101  0.32802497 0.3852126</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="fu">barplot</span>(<span class="fu">apply</span>(H2.ilr, <span class="dv">2</span>, var))</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
 <p>Note that the PC coordinates are independent:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">cov</span>(H2.ilr)</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co">#&gt;              pc1           pc2           pc3</span></span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#&gt; pc1 4.475083e-01  1.036012e-16  1.997487e-16</span></span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt; pc2 1.036012e-16  3.650673e-02 -3.031068e-17</span></span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; pc3 1.997487e-16 -3.031068e-17  1.257989e-02</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">cov</span>(H2.ilr)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt;               pc1           pc2           pc3</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt; pc1  4.475083e-01 -6.329939e-17  3.397482e-17</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; pc2 -6.329939e-17  3.650673e-02 -9.452139e-19</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; pc3  3.397482e-17 -9.452139e-19  1.257989e-02</span></span></code></pre></div>
 <p>The Principal Balance coordinates are similar to PC coordinates but
 with the restriction that the log contrast are balances</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>H3.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;pb&#39;</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">head</span>(H3.ilr)</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt;          pb1         pb2         pb3</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.7026704 -0.14697799 -0.50925247</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt; 2 -0.5801749 -0.22679692 -0.74060456</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.7206583 -0.12358191 -0.37622854</span></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.9052439 -0.18836356 -0.33935049</span></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; 5 -0.5646882  0.05082486 -0.07274761</span></span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.2956308 -0.07090708 -0.48495254</span></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="fu">barplot</span>(<span class="fu">apply</span>(H3.ilr, <span class="dv">2</span>, var))</span></code></pre></div>
-<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>H3.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;pb&#39;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">head</span>(H3.ilr)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#&gt;          pb1         pb2         pb3</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt; 1 -0.7026704 -0.14697799 -0.50925247</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; 2 -0.5801749 -0.22679692 -0.74060456</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt; 3 -0.7206583 -0.12358191 -0.37622854</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt; 4 -0.9052439 -0.18836356 -0.33935049</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt; 5 -0.5646882  0.05082486 -0.07274761</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; 6 -0.2956308 -0.07090708 -0.48495254</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="fu">barplot</span>(<span class="fu">apply</span>(H3.ilr, <span class="dv">2</span>, var))</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
 <p>Moreover, they are not independent:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">cor</span>(H3.ilr)</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co">#&gt;            pb1       pb2        pb3</span></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; pb1  1.0000000 0.6043786 -0.3197742</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt; pb2  0.6043786 1.0000000  0.1594538</span></span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt; pb3 -0.3197742 0.1594538  1.0000000</span></span></code></pre></div>
-<p>Principal Balances are hard to compute when the number of components
-is very high. <code>coda.base</code> allows to build PB approximations
-using different algorithms.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>X100 <span class="ot">=</span> <span class="fu">exp</span>(<span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">1000</span><span class="sc">*</span><span class="dv">100</span>), <span class="at">ncol =</span> <span class="dv">100</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">cor</span>(H3.ilr)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt;            pb1       pb2        pb3</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; pb1  1.0000000 0.6043786 -0.3197742</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt; pb2  0.6043786 1.0000000  0.1594538</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt; pb3 -0.3197742 0.1594538  1.0000000</span></span></code></pre></div>
+<p>Principal Balances are challenging to compute when the number of
+components is very high. <code>coda.base</code> allows building PB
+approximations using different algorithms.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>X100 <span class="ot">=</span> <span class="fu">exp</span>(<span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">1000</span><span class="sc">*</span><span class="dv">100</span>), <span class="at">ncol =</span> <span class="dv">100</span>))</span></code></pre></div>
 <ul>
 <li><em>Hierarchical clustering based algorithm</em>.</li>
 </ul>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>PB1.ward <span class="ot">=</span> <span class="fu">pb_basis</span>(X100, <span class="at">method =</span> <span class="st">&#39;cluster&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>PB1.ward <span class="ot">=</span> <span class="fu">pb_basis</span>(X100, <span class="at">method =</span> <span class="st">&#39;cluster&#39;</span>)</span></code></pre></div>
 <ul>
 <li><em>Constrained search algorithm</em></li>
 </ul>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>PB1.constrained <span class="ot">=</span> <span class="fu">pb_basis</span>(X100, <span class="at">method =</span> <span class="st">&#39;constrained&#39;</span>)</span></code></pre></div>
-<p>We can compare they performance (variance explained by the first
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>PB1.constrained <span class="ot">=</span> <span class="fu">pb_basis</span>(X100, <span class="at">method =</span> <span class="st">&#39;constrained&#39;</span>)</span></code></pre></div>
+<p>We can compare their performance (variance explained by the first
 balance) with respect to the principal components.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>PC_approx <span class="ot">=</span> <span class="fu">coordinates</span>(X100, <span class="fu">cbind</span>(<span class="fu">pc_basis</span>(X100)[,<span class="dv">1</span>], PB1.ward[,<span class="dv">1</span>], PB1.constrained[,<span class="dv">1</span>]))</span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="fu">names</span>(PC_approx) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&#39;PC&#39;</span>, <span class="st">&#39;Ward&#39;</span>, <span class="st">&#39;Constrained&#39;</span>)</span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="fu">apply</span>(PC_approx, <span class="dv">2</span>, var)</span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt;       h1       h2       h3 </span></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">#&gt; 1.702951 1.418563 1.582705</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>PC_approx <span class="ot">=</span> <span class="fu">coordinates</span>(X100, <span class="fu">cbind</span>(<span class="fu">pc_basis</span>(X100)[,<span class="dv">1</span>], PB1.ward[,<span class="dv">1</span>], PB1.constrained[,<span class="dv">1</span>]))</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="fu">names</span>(PC_approx) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&#39;PC&#39;</span>, <span class="st">&#39;Ward&#39;</span>, <span class="st">&#39;Constrained&#39;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="fu">apply</span>(PC_approx, <span class="dv">2</span>, var)</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co">#&gt;       h1       h2       h3 </span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="co">#&gt; 1.745315 1.377827 1.605330</span></span></code></pre></div>
 <p>Finally, <code>coda.base</code> allows to define the default CoDaPack
 basis which consists in defining well balanced balances, i.e. equal
 number of branches in each balance.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>H4.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;cdp&#39;</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="fu">head</span>(H4.ilr)</span>
-<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="co">#&gt;        ilr1        ilr2        ilr3</span></span>
-<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co">#&gt; 1 0.7026704 -0.14697799 -0.50925247</span></span>
-<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="co">#&gt; 2 0.5801749 -0.22679692 -0.74060456</span></span>
-<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="co">#&gt; 3 0.7206583 -0.12358191 -0.37622854</span></span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co">#&gt; 4 0.9052439 -0.18836356 -0.33935049</span></span>
-<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="co">#&gt; 5 0.5646882  0.05082486 -0.07274761</span></span>
-<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="co">#&gt; 6 0.2956308 -0.07090708 -0.48495254</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>H4.ilr <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> <span class="st">&#39;cdp&#39;</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="fu">head</span>(H4.ilr)</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="co">#&gt;        ilr1        ilr2        ilr3</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt; 1 0.7026704 -0.14697799 -0.50925247</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">#&gt; 2 0.5801749 -0.22679692 -0.74060456</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co">#&gt; 3 0.7206583 -0.12358191 -0.37622854</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">#&gt; 4 0.9052439 -0.18836356 -0.33935049</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co">#&gt; 5 0.5646882  0.05082486 -0.07274761</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co">#&gt; 6 0.2956308 -0.07090708 -0.48495254</span></span></code></pre></div>
 </div>
 </div>
 <div id="defining-coordinates-manually" class="section level1">
@@ -529,95 +523,95 @@ number of branches in each balance.</p>
 <h2>Defining coordinates with an specific basis</h2>
 <p>We can define the coordinates directly by providing the log-contrast
 matrix.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">0</span>,</span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>             <span class="dv">1</span>,<span class="dv">0</span>,<span class="sc">-</span><span class="fl">0.5</span>,<span class="sc">-</span><span class="fl">0.5</span>,</span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>             <span class="sc">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>H1.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
-<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="fu">head</span>(H1.man)</span>
-<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a><span class="co">#&gt;          h1        h2          h3</span></span>
-<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="co">#&gt; 1 -2.125532 0.5987412  0.10392914</span></span>
-<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="co">#&gt; 2 -2.207723 0.4198053  0.16036964</span></span>
-<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="co">#&gt; 3 -1.973384 0.6332727  0.08738560</span></span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="co">#&gt; 4 -2.290402 0.7720507  0.13319315</span></span>
-<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a><span class="co">#&gt; 5 -1.232257 0.6006268 -0.03593861</span></span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co">#&gt; 6 -1.277088 0.2454919  0.05013888</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">0</span>,</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>             <span class="dv">1</span>,<span class="dv">0</span>,<span class="sc">-</span><span class="fl">0.5</span>,<span class="sc">-</span><span class="fl">0.5</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>             <span class="sc">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>H1.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="fu">head</span>(H1.man)</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="co">#&gt;          h1        h2          h3</span></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co">#&gt; 1 -2.125532 0.5987412  0.10392914</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="co">#&gt; 2 -2.207723 0.4198053  0.16036964</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="co">#&gt; 3 -1.973384 0.6332727  0.08738560</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="co">#&gt; 4 -2.290402 0.7720507  0.13319315</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="co">#&gt; 5 -1.232257 0.6006268 -0.03593861</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="co">#&gt; 6 -1.277088 0.2454919  0.05013888</span></span></code></pre></div>
 </div>
 <div id="defining-coordinates-using-balances" class="section level2">
 <h2>Defining coordinates using balances</h2>
 <p>We can also define balances using formula
 <code>numerator~denominator</code>:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>B.man <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">~</span>jxcat,</span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>                       <span class="at">b2 =</span> psc<span class="sc">~</span>cs,</span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>                       <span class="at">b3 =</span> erc<span class="sc">+</span>jxcat<span class="sc">~</span>psc<span class="sc">+</span>cs), </span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>                  <span class="at">data=</span>X)</span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>H2.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B.man)</span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a><span class="fu">head</span>(H2.man)</span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co">#&gt;            b1          b2        b3</span></span>
-<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="co">#&gt; 1 -0.14697799 -0.50925247 0.7026704</span></span>
-<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="co">#&gt; 2 -0.22679692 -0.74060456 0.5801749</span></span>
-<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a><span class="co">#&gt; 3 -0.12358191 -0.37622854 0.7206583</span></span>
-<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="co">#&gt; 4 -0.18836356 -0.33935049 0.9052439</span></span>
-<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a><span class="co">#&gt; 5  0.05082486 -0.07274761 0.5646882</span></span>
-<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="co">#&gt; 6 -0.07090708 -0.48495254 0.2956308</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>B.man <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">~</span>jxcat,</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>                       <span class="at">b2 =</span> psc<span class="sc">~</span>cs,</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>                       <span class="at">b3 =</span> erc<span class="sc">+</span>jxcat<span class="sc">~</span>psc<span class="sc">+</span>cs), </span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>                  <span class="at">data=</span>X)</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>H2.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B.man)</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a><span class="fu">head</span>(H2.man)</span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="co">#&gt;            b1          b2        b3</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="co">#&gt; 1 -0.14697799 -0.50925247 0.7026704</span></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="co">#&gt; 2 -0.22679692 -0.74060456 0.5801749</span></span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="co">#&gt; 3 -0.12358191 -0.37622854 0.7206583</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a><span class="co">#&gt; 4 -0.18836356 -0.33935049 0.9052439</span></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co">#&gt; 5  0.05082486 -0.07274761 0.5646882</span></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="co">#&gt; 6 -0.07090708 -0.48495254 0.2956308</span></span></code></pre></div>
 <p>With <code>sbp_basis</code> we do not need to define neither a basis
 nor a system generator</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">+</span>jxcat<span class="sc">~</span>psc<span class="sc">+</span>cs), </span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>              <span class="at">data=</span>X)</span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="co">#&gt; Warning in sbp_basis(list(b1 = erc + jxcat ~ psc + cs), data = X): Given</span></span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="co">#&gt; partition is not a basis</span></span>
-<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>H3.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="fu">head</span>(H3.man)</span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co">#&gt;          b1</span></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">#&gt; 1 0.7026704</span></span>
-<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="co">#&gt; 2 0.5801749</span></span>
-<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="co">#&gt; 3 0.7206583</span></span>
-<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co">#&gt; 4 0.9052439</span></span>
-<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="co">#&gt; 5 0.5646882</span></span>
-<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a><span class="co">#&gt; 6 0.2956308</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">+</span>jxcat<span class="sc">~</span>psc<span class="sc">+</span>cs), </span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>              <span class="at">data=</span>X)</span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="co">#&gt; Warning in sbp_basis(list(b1 = erc + jxcat ~ psc + cs), data = X): Given</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="co">#&gt; partition is not a basis</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>H3.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a><span class="fu">head</span>(H3.man)</span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co">#&gt;          b1</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="co">#&gt; 1 0.7026704</span></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="co">#&gt; 2 0.5801749</span></span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a><span class="co">#&gt; 3 0.7206583</span></span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="co">#&gt; 4 0.9052439</span></span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a><span class="co">#&gt; 5 0.5646882</span></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="co">#&gt; 6 0.2956308</span></span></code></pre></div>
 <p>or</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">~</span>jxcat<span class="sc">+</span>psc<span class="sc">~</span>cs, </span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>                   <span class="at">b2 =</span> jxcat<span class="sc">~</span>erc<span class="sc">+</span>psc<span class="sc">+</span>cs,</span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>                   <span class="at">b3 =</span> psc<span class="sc">~</span>erc<span class="sc">+</span>jxcat<span class="sc">+</span>cs,</span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>                   <span class="at">b4 =</span> cs<span class="sc">~</span>erc<span class="sc">+</span>jxcat<span class="sc">+</span>psc),</span>
-<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a>              <span class="at">data=</span>X)</span>
-<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a><span class="co">#&gt; Warning in sbp_basis(list(b1 = erc ~ jxcat + psc ~ cs, b2 = jxcat ~ erc + :</span></span>
-<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="co">#&gt; Given basis is not orthogonal</span></span>
-<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>H4.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
-<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a><span class="fu">head</span>(H4.man)</span>
-<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a><span class="co">#&gt;            b1        b2         b3          b4</span></span>
-<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a><span class="co">#&gt; 1 -0.01011597 0.5256940 -0.8214898  0.01011597</span></span>
-<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a><span class="co">#&gt; 2 -0.26973693 0.5201431 -0.9396653  0.26973693</span></span>
-<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a><span class="co">#&gt; 3  0.10888296 0.5169765 -0.7232616 -0.10888296</span></span>
-<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a><span class="co">#&gt; 4  0.24556428 0.6764410 -0.7997213 -0.24556428</span></span>
-<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a><span class="co">#&gt; 5  0.26662472 0.2845246 -0.3854211 -0.26662472</span></span>
-<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a><span class="co">#&gt; 6 -0.22527958 0.2285779 -0.5666446  0.22527958</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">~</span>jxcat<span class="sc">+</span>psc<span class="sc">~</span>cs, </span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>                   <span class="at">b2 =</span> jxcat<span class="sc">~</span>erc<span class="sc">+</span>psc<span class="sc">+</span>cs,</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>                   <span class="at">b3 =</span> psc<span class="sc">~</span>erc<span class="sc">+</span>jxcat<span class="sc">+</span>cs,</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>                   <span class="at">b4 =</span> cs<span class="sc">~</span>erc<span class="sc">+</span>jxcat<span class="sc">+</span>psc),</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>              <span class="at">data=</span>X)</span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="co">#&gt; Warning in sbp_basis(list(b1 = erc ~ jxcat + psc ~ cs, b2 = jxcat ~ erc + :</span></span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co">#&gt; Given basis is not orthogonal</span></span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>H4.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="fu">head</span>(H4.man)</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="co">#&gt;            b1        b2         b3          b4</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co">#&gt; 1 -0.01011597 0.5256940 -0.8214898  0.01011597</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="co">#&gt; 2 -0.26973693 0.5201431 -0.9396653  0.26973693</span></span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a><span class="co">#&gt; 3  0.10888296 0.5169765 -0.7232616 -0.10888296</span></span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a><span class="co">#&gt; 4  0.24556428 0.6764410 -0.7997213 -0.24556428</span></span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a><span class="co">#&gt; 5  0.26662472 0.2845246 -0.3854211 -0.26662472</span></span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a><span class="co">#&gt; 6 -0.22527958 0.2285779 -0.5666446  0.22527958</span></span></code></pre></div>
 <p>If interested, we can complete a sequential binary partition giving
 only some partitions</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">+</span>jxcat<span class="sc">~</span>psc), </span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>              <span class="at">data=</span>X, <span class="at">fill =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="fu">sign</span>(B)</span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="co">#&gt;    [,1] [,2] [,3]</span></span>
-<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="co">#&gt; V1    1    1    1</span></span>
-<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a><span class="co">#&gt; V2    1    1   -1</span></span>
-<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="co">#&gt; V3   -1    1    0</span></span>
-<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a><span class="co">#&gt; V4    0   -1    0</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(<span class="fu">list</span>(<span class="at">b1 =</span> erc<span class="sc">+</span>jxcat<span class="sc">~</span>psc), </span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>              <span class="at">data=</span>X, <span class="at">fill =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="fu">sign</span>(B)</span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="co">#&gt;    [,1] [,2] [,3]</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="co">#&gt; V1    1    1    1</span></span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a><span class="co">#&gt; V2    1    1   -1</span></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="co">#&gt; V3   -1    1    0</span></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a><span class="co">#&gt; V4    0   -1    0</span></span></code></pre></div>
 <p>We can also define sequential binary partition using a matrix. By
 using a matrix we don’t need to include a dataset. The number of
 components is obtained with the number of rows and component names from
 row names (if available).</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>P <span class="ot">=</span>  <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>,</span>
-<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>              <span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>,</span>
-<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>              <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>), <span class="at">ncol=</span> <span class="dv">3</span>)</span>
-<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(P)</span>
-<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a>H5.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
-<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a><span class="fu">head</span>(H5.man)</span>
-<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a><span class="co">#&gt;          h1          h2          h3</span></span>
-<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a><span class="co">#&gt; 1 0.7026704 -0.14697799 -0.50925247</span></span>
-<span id="cb24-9"><a href="#cb24-9" tabindex="-1"></a><span class="co">#&gt; 2 0.5801749 -0.22679692 -0.74060456</span></span>
-<span id="cb24-10"><a href="#cb24-10" tabindex="-1"></a><span class="co">#&gt; 3 0.7206583 -0.12358191 -0.37622854</span></span>
-<span id="cb24-11"><a href="#cb24-11" tabindex="-1"></a><span class="co">#&gt; 4 0.9052439 -0.18836356 -0.33935049</span></span>
-<span id="cb24-12"><a href="#cb24-12" tabindex="-1"></a><span class="co">#&gt; 5 0.5646882  0.05082486 -0.07274761</span></span>
-<span id="cb24-13"><a href="#cb24-13" tabindex="-1"></a><span class="co">#&gt; 6 0.2956308 -0.07090708 -0.48495254</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>P <span class="ot">=</span>  <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>,</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>              <span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>              <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>), <span class="at">ncol=</span> <span class="dv">3</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">sbp_basis</span>(P)</span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a>H5.man <span class="ot">=</span> <span class="fu">coordinates</span>(X, <span class="at">basis =</span> B)</span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a><span class="fu">head</span>(H5.man)</span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="co">#&gt;          h1          h2          h3</span></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a><span class="co">#&gt; 1 0.7026704 -0.14697799 -0.50925247</span></span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a><span class="co">#&gt; 2 0.5801749 -0.22679692 -0.74060456</span></span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="co">#&gt; 3 0.7206583 -0.12358191 -0.37622854</span></span>
+<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a><span class="co">#&gt; 4 0.9052439 -0.18836356 -0.33935049</span></span>
+<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a><span class="co">#&gt; 5 0.5646882  0.05082486 -0.07274761</span></span>
+<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a><span class="co">#&gt; 6 0.2956308 -0.07090708 -0.48495254</span></span></code></pre></div>
 </div>
 </div>
 
