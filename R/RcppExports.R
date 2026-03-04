@@ -5,8 +5,8 @@ pinv <- function(X) {
     .Call(`_coda_base_pinv`, X)
 }
 
-c_variation_array <- function(X, include_means = FALSE) {
-    .Call(`_coda_base_c_variation_array`, X, include_means)
+c_variation_array <- function(X, include_means, ml_covariance) {
+    .Call(`_coda_base_c_variation_array`, X, include_means, ml_covariance)
 }
 
 alr_basis_default <- function(dim) {
@@ -25,10 +25,6 @@ ilr_basis_simplex <- function(dim) {
     .Call(`_coda_base_ilr_basis_simplex`, dim)
 }
 
-ilr_to_alr <- function(dim) {
-    .Call(`_coda_base_ilr_to_alr`, dim)
-}
-
 clr_coordinates <- function(X) {
     .Call(`_coda_base_clr_coordinates`, X)
 }
@@ -41,18 +37,6 @@ alr_coordinates <- function(X, denominator) {
     .Call(`_coda_base_alr_coordinates`, X, denominator)
 }
 
-matrix_coordinates <- function(X, B) {
-    .Call(`_coda_base_matrix_coordinates`, X, B)
-}
-
-sparse_coordinates <- function(X, B) {
-    .Call(`_coda_base_sparse_coordinates`, X, B)
-}
-
-coordinates_basis <- function(X, B, sparse = FALSE) {
-    .Call(`_coda_base_coordinates_basis`, X, B, sparse)
-}
-
 ilr_coordinates <- function(X) {
     .Call(`_coda_base_ilr_coordinates`, X)
 }
@@ -61,27 +45,35 @@ inv_ilr_coordinates <- function(ilrX) {
     .Call(`_coda_base_inv_ilr_coordinates`, ilrX)
 }
 
+matrix_coordinates <- function(X, B) {
+    .Call(`_coda_base_matrix_coordinates`, X, B)
+}
+
+sparse_coordinates <- function(X, B) {
+    .Call(`_coda_base_sparse_coordinates`, X, B)
+}
+
+ilr_to_alr <- function(dim) {
+    .Call(`_coda_base_ilr_to_alr`, dim)
+}
+
+c_coda_replacement <- function(tX, tDL, dl_prop = 0.65, eps = 1e-4, parameters = FALSE, debug = FALSE, maxit = 500L) {
+    .Call(`_coda_base_c_coda_replacement`, tX, tDL, dl_prop, eps, parameters, debug, maxit)
+}
+
 c_conditional_obasis <- function(C) {
     .Call(`_coda_base_c_conditional_obasis`, C)
 }
 
-get_balance_using_pc <- function(X, angle = FALSE) {
-    .Call(`_coda_base_get_balance_using_pc`, X, angle)
+c_zero_na_conditional_obasis <- function(tX) {
+    .Call(`_coda_base_c_zero_na_conditional_obasis`, tX)
 }
 
 find_PB <- function(X) {
     .Call(`_coda_base_find_PB`, X)
 }
 
-find_PB_using_pc <- function(X) {
-    .Call(`_coda_base_find_PB_using_pc`, X)
-}
-
-find_PB_using_pc_recursively <- function(X) {
-    .Call(`_coda_base_find_PB_using_pc_recursively`, X)
-}
-
-find_PB_using_pc_recursively_forcing_parents <- function(X) {
-    .Call(`_coda_base_find_PB_using_pc_recursively_forcing_parents`, X)
+get_balance_using_pc <- function(X, angle = FALSE) {
+    .Call(`_coda_base_get_balance_using_pc`, X, angle)
 }
 
