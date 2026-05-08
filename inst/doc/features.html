@@ -12,7 +12,7 @@
 
 <meta name="author" content="Marc Comas-Cufí" />
 
-<meta name="date" content="2026-03-04" />
+<meta name="date" content="2026-05-08" />
 
 <title>coda.base features’ enumeration</title>
 
@@ -342,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore"><code>coda.base</code> features’
 enumeration</h1>
 <h4 class="author">Marc Comas-Cufí</h4>
-<h4 class="date">2026-03-04</h4>
+<h4 class="date">2026-05-08</h4>
 
 
 
@@ -393,14 +393,16 @@ enumeration</h1>
 <p><code>stats::dist()</code> is rewritten to include the Aitchison
 distance between compositions:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">dist</span>(X, <span class="at">method =</span> <span class="st">&#39;aitchison&#39;</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;           O1        O2        O3        O4        O5        O6        O7</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; O2 1.7312698                                                            </span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; O3 2.4651454 2.6482563                                                  </span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; O4 3.2924718 2.2982518 3.1363020                                        </span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; O5 2.1967501 0.5310050 2.9124924 2.1147115                              </span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; O6 2.6637001 1.8840274 4.0189064 3.9336894 2.0813815                    </span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; O7 0.7482808 1.9679763 2.9204289 3.2563331 2.3587517 2.8831297          </span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; O8 2.7579161 3.2673090 4.1643719 3.2700093 3.5174190 4.0863918 2.2159481</span></span></code></pre></div>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; Warning: Use dist_coda(x, method = &quot;aitchison&quot;) instead. The Aitchison</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; extension in coda.base::dist() will be removed in a future version.</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;           O1        O2        O3        O4        O5        O6        O7</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; O2 1.7312698                                                            </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; O3 2.4651454 2.6482563                                                  </span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; O4 3.2924718 2.2982518 3.1363020                                        </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; O5 2.1967501 0.5310050 2.9124924 2.1147115                              </span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; O6 2.6637001 1.8840274 4.0189064 3.9336894 2.0813815                    </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; O7 0.7482808 1.9679763 2.9204289 3.2563331 2.3587517 2.8831297          </span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; O8 2.7579161 3.2673090 4.1643719 3.2700093 3.5174190 4.0863918 2.2159481</span></span></code></pre></div>
 </div>
 <div id="log-ratio-coordinates.-coordinates" class="section level4">
 <h4>Log-ratio coordinates. <code>coordinates()</code></h4>
