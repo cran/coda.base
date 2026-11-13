@@ -92,7 +92,7 @@ H3.man = coordinates(X, basis = B)
 head(H3.man)
 
 ## -----------------------------------------------------------------------------
-B = sbp_basis(list(b1 = erc~jxcat+psc~cs, 
+B = sbp_basis(list(b1 = erc~jxcat+psc+cs,
                    b2 = jxcat~erc+psc+cs,
                    b3 = psc~erc+jxcat+cs,
                    b4 = cs~erc+jxcat+psc),
@@ -104,6 +104,16 @@ head(H4.man)
 B = sbp_basis(list(b1 = erc+jxcat~psc), 
               data=X, fill = TRUE)
 sign(B)
+
+## -----------------------------------------------------------------------------
+B.qr = sbp_basis(list(
+  ef = e ~ f,
+  cd = c ~ d,
+  aef = a + e + f ~ b + c + d,
+  ab = a + b ~ c + d + e + f
+), data = letters[1:6], fill = TRUE)
+round(B.qr, 3)
+round(crossprod(B.qr), 10)
 
 ## -----------------------------------------------------------------------------
 P =  matrix(c(1, 1,-1,-1,

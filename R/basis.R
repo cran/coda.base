@@ -264,6 +264,134 @@ cc_basis <- function(Y, X) {
   B
 }
 
+# Parse only part names, additions and parentheses; model formula operators do
+# not describe groups of compositional parts.
+.sbp_group <- function(expr) {
+  pending <- list(expr)
+  parts <- character()
+  while (length(pending)) {
+    last <- length(pending)
+    node <- pending[[last]]
+    pending[[last]] <- NULL
+    if (is.symbol(node) && nzchar(as.character(node))) {
+      parts <- c(parts, as.character(node))
+    } else if (is.call(node) && identical(node[[1]], as.name("+")) &&
+               length(node) == 3L) {
+      pending <- c(pending, list(node[[3]], node[[2]]))
+    } else if (is.call(node) && identical(node[[1]], as.name("(")) &&
+               length(node) == 2L) {
+      pending <- c(pending, list(node[[2]]))
+    } else {
+      stop("Balance groups must contain part names joined by '+'.")
+    }
+  }
+  unique(parts)
+}
+
+.sbp_formula_matrix <- function(sbp, data) {
+  if (!is.list(sbp) || !length(sbp) ||
+      !all(vapply(sbp, inherits, logical(1), "formula"))) {
+    stop("'sbp' must be a numeric matrix or a non-empty list of formulas.")
+  }
+  K <- length(sbp)
+  balance_names <- names(sbp)
+  if (is.null(balance_names)) balance_names <- rep("", K)
+  if (anyNA(balance_names) || anyDuplicated(balance_names[nzchar(balance_names)])) {
+    stop("Balance names must be non-missing and unique when supplied.")
+  }
+  named <- nzchar(balance_names)
+  groups <- lapply(sbp, function(formula) {
+    if (length(formula) != 3L) {
+      stop("Each balance formula must have a numerator and a denominator.")
+    }
+    list(.sbp_group(formula[[2]]), .sbp_group(formula[[3]]))
+  })
+  variables <- lapply(groups, function(g) unique(c(g[[1]], g[[2]])))
+  references <- balance_names[named]
+  if (is.null(data)) {
+    part_names <- setdiff(unique(unlist(variables, use.names = FALSE)), references)
+  } else if (is.character(data) && is.null(dim(data))) {
+    part_names <- data
+  } else if (is.matrix(data) || is.data.frame(data)) {
+    part_names <- colnames(data)
+  } else {
+    stop("'data' must be a character vector, a data.frame or a matrix with column names.")
+  }
+  if (is.null(part_names) || anyNA(part_names) || any(!nzchar(part_names)) ||
+      anyDuplicated(part_names)) {
+    stop("Part names must be non-missing, non-empty and unique.")
+  }
+  if (any(references %in% part_names)) {
+    stop("Balance names must not also be part names.")
+  }
+  unknown <- setdiff(unlist(variables, use.names = FALSE), c(part_names, references))
+  if (length(unknown)) {
+    stop("Unknown parts or balance references: ", paste(unknown, collapse = ", "))
+  }
+
+  # Resolve the dependency graph once, without recursion, so long chains and
+  # forward references work and cycles fail before expanding any cyclic group.
+  dependencies <- lapply(variables, function(vars) {
+    indices <- match(vars, balance_names, nomatch = 0L)
+    indices[indices != 0L]
+  })
+  remaining <- lengths(dependencies)
+  dependents <- vector("list", K)
+  for (i in seq_len(K)) {
+    for (j in dependencies[[i]]) dependents[[j]] <- c(dependents[[j]], i)
+  }
+  queue <- integer(K)
+  ready <- which(remaining == 0L)
+  queue_end <- length(ready)
+  queue[seq_len(queue_end)] <- ready
+  head <- 1L
+  while (head <= queue_end) {
+    i <- queue[head]
+    head <- head + 1L
+    next_indices <- dependents[[i]]
+    remaining[next_indices] <- remaining[next_indices] - 1L
+    ready <- next_indices[remaining[next_indices] == 0L]
+    if (length(ready)) {
+      queue[queue_end + seq_along(ready)] <- ready
+      queue_end <- queue_end + length(ready)
+    }
+  }
+  if (queue_end != K) {
+    stop("Circular balance references; unresolved balances: ",
+         paste(balance_names[remaining > 0L], collapse = ", "))
+  }
+  if (length(part_names) < 2L) stop("At least two parts are required.")
+
+  expanded <- vector("list", K)
+  signs <- matrix(0, length(part_names), K)
+  expand <- function(tokens) {
+    refs <- match(tokens, balance_names, nomatch = 0L)
+    unique(unlist(lapply(seq_along(tokens), function(j) {
+      if (refs[j] != 0L) expanded[[refs[j]]] else match(tokens[j], part_names)
+    }), use.names = FALSE))
+  }
+  for (i in queue) {
+    numerator <- expand(groups[[i]][[1]])
+    denominator <- expand(groups[[i]][[2]])
+    if (!length(numerator) || !length(denominator) ||
+        any(numerator %in% denominator)) {
+      stop("Each balance must have non-empty, disjoint numerator and denominator groups (balance ",
+           i, ").")
+    }
+    signs[numerator, i] <- 1
+    signs[denominator, i] <- -1
+    expanded[[i]] <- c(numerator, denominator)
+  }
+  # Keep supplied names intact, even when they coincide with generated names.
+  if (any(!named)) {
+    generated <- make.unique(c(references, paste0("b", which(!named))))
+    balance_names[!named] <- generated[length(references) + seq_len(sum(!named))]
+  }
+  dimnames(signs) <- list(part_names, balance_names)
+  signs
+}
+
+
 #' Basis from a sequential binary partition
 #'
 #' Construct a balance basis from a sequential binary partition (SBP) or from a
@@ -278,15 +406,51 @@ cc_basis <- function(Y, X) {
 #'   the denominator, and zeros indicate unused parts.
 #' }
 #'
-#' @param sbp A list of formulas or a matrix describing balances.
-#' @param data Optional compositional data set used to extract part names when
-#'   `sbp` is given as a list of formulas.
-#' @param fill Logical; if `TRUE`, complete the supplied balances to obtain a
-#'   full basis.
-#' @param silent Logical; if `FALSE`, report whether the resulting balances form
-#'   a basis, and whether they are orthogonal or orthonormal.
+#' Formula groups contain part names joined by `+`, optionally enclosed in
+#' parentheses. Repeated parts within a group are counted once; numerator and
+#' denominator groups must be non-empty and disjoint. A named balance can be
+#' referenced in another formula to include all its parts, regardless of their
+#' signs. Forward references are allowed, but circular references and ambiguous
+#' names shared by balances and parts are rejected.
 #'
-#' @return A matrix whose columns are balances.
+#' With `fill = TRUE`, supplied balances are preserved in their original order.
+#' If they are compatible with a hierarchical SBP, the hierarchy is completed
+#' by adding balances. Compatibility means that each pair involves disjoint
+#' sets of parts, or one balance lies wholly within one group of the other.
+#' Otherwise, QR decomposition supplies an orthonormal basis for the orthogonal
+#' complement of the supplied balances within the clr-plane. These added
+#' columns sum to zero and are orthogonal to all supplied columns, but need not
+#' be balances.
+#'
+#' Completion adds `D - 1 - r` columns, where `D` is the number of parts and `r`
+#' is the rank of the supplied balances. The result is orthonormal if the
+#' supplied balances are mutually orthogonal. Non-orthogonal inputs are kept
+#' and produce a warning unless `silent = TRUE`. Linearly dependent inputs are
+#' also kept: completion then returns a redundant generating system rather than
+#' a basis, and warns accordingly. Without completion, an incomplete collection
+#' also produces a warning unless `silent = TRUE`.
+#'
+#' @param sbp A non-empty list of formulas or a numeric matrix with finite
+#'   entries describing balances. At least two parts are required. A matrix
+#'   with zero columns can be supplied to construct a full basis with
+#'   `fill = TRUE`.
+#' @param data Optional compositional data set with column names, or a character
+#'   vector of part names, used when `sbp` is a list of formulas. If `data = NULL`,
+#'   part names are inferred from the formulas themselves.
+#' @param fill Logical; if `TRUE`, complete the supplied balances to span the
+#'   clr-plane, using hierarchical balances when compatible and an orthogonal
+#'   complement obtained by QR otherwise.
+#' @param silent Logical; if `FALSE`, warn when the result is not a basis, or
+#'   when the basis is not orthogonal or orthonormal. Does not suppress errors
+#'   for invalid input.
+#'
+#' @return A numeric matrix whose columns are normalized balances and, when
+#'   needed for completion, general log-contrasts. Unnamed supplied balances
+#'   receive names `b1`, `b2`, etc. Added hierarchical balances have names `.b`
+#'   followed by their column number; QR complement columns use `.q` instead.
+#'   Names are made unique without changing supplied balance names. With
+#'   `fill = TRUE`, the matrix has `D - 1` columns for independent inputs, or
+#'   more columns if the supplied balances are linearly dependent.
 #'
 #' @examples
 #' X <- data.frame(
@@ -314,6 +478,38 @@ cc_basis <- function(Y, X) {
 #'   b6 = b5 ~ g
 #' ), data = X)
 #'
+#' # Formula parts can be inferred when data is not supplied
+#' sbp_basis(list(
+#'   b1 = a ~ b,
+#'   b2 = b1 ~ c
+#' ))
+#'
+#' # Complete a partial hierarchy with further balances
+#' B_sbp <- sbp_basis(list(ab = a ~ b), data = letters[1:4], fill = TRUE)
+#' B_sbp
+#' crossprod(B_sbp)
+#'
+#' # Orthogonal balances with crossing groups: complete by QR
+#' # The added .q5 column is a general log-contrast, not a balance
+#' B_qr <- sbp_basis(list(
+#'   ef = e ~ f,
+#'   cd = c ~ d,
+#'   aef = a + e + f ~ b + c + d,
+#'   ab = a + b ~ c + d + e + f
+#' ), data = letters[1:6], fill = TRUE)
+#' round(B_qr, 3)
+#' crossprod(B_qr)
+#'
+#' # Non-orthogonal inputs are preserved; completion warns
+#' B_nonorthogonal <- sbp_basis(list(ab = a ~ b, bc = b ~ c),
+#'                             data = letters[1:4], fill = TRUE)
+#' crossprod(B_nonorthogonal)
+#'
+#' # Dependent inputs are also preserved, producing a redundant system
+#' B_redundant <- sbp_basis(list(ab = a ~ b, ab_again = a ~ b),
+#'                         data = letters[1:4], fill = TRUE)
+#' dim(B_redundant)
+#'
 #' # Non-orthogonal system of balances
 #' sbp_basis(list(
 #'   b1 = a + b + c ~ e + f + g,
@@ -333,143 +529,108 @@ cc_basis <- function(Y, X) {
 #'
 #' @export
 sbp_basis <- function(sbp, data = NULL, fill = FALSE, silent = FALSE) {
+  if (!is.logical(fill) || length(fill) != 1L || is.na(fill) ||
+      !is.logical(silent) || length(silent) != 1L || is.na(silent)) {
+    stop("'fill' and 'silent' must each be TRUE or FALSE.")
+  }
   if (is.matrix(sbp)) {
-    RES <- apply(sign(sbp), 2, function(x) {
-      s1 <- x == 1
-      s2 <- x == -1
-      I1 <- sum(s1)
-      I2 <- sum(s2)
-
-      if (I1 == 0 || I2 == 0) {
-        stop("Each balance must contain at least one positive and one negative part.")
-      }
-
-      l <- +1 / I1 * sqrt(I1 * I2 / (I1 + I2))
-      r <- -1 / I2 * sqrt(I1 * I2 / (I1 + I2))
-
-      bal <- rep(0, length(x))
-      bal[s1] <- l
-      bal[s2] <- r
-      bal
-    })
-
-    if (is.null(rownames(sbp))) {
-      rownames(RES) <- paste0("c", seq_len(nrow(sbp)))
-    } else {
-      rownames(RES) <- rownames(sbp)
+    if (!is.numeric(sbp) || any(!is.finite(sbp))) {
+      stop("'sbp' must be a numeric matrix with finite entries.")
     }
-
-    if (is.null(colnames(sbp))) {
-      colnames(RES) <- paste0("b", seq_len(ncol(sbp)))
-    } else {
-      colnames(RES) <- colnames(sbp)
+    if (nrow(sbp) < 2L) stop("At least two parts are required.")
+    signs <- sign(sbp)
+    if (is.null(rownames(signs))) rownames(signs) <- paste0("c", seq_len(nrow(signs)))
+    if (is.null(colnames(signs)) && ncol(signs) > 0L) {
+      colnames(signs) <- paste0("b", seq_len(ncol(signs)))
     }
-
   } else {
-    if (is.character(data)) {
-      part_names <- data
-    } else {
-      if (!is.data.frame(data) &&
-          !is.environment(data) &&
-          ((is.matrix(data) && !is.null(colnames(data))) ||
-           !is.null(attr(data, "class")))) {
-        data <- as.data.frame(data)
-      } else if (is.array(data)) {
-        stop("'data' must be a data.frame or a matrix with column names")
-      }
-      part_names <- colnames(data)
-    }
-
-    if (!all(unlist(lapply(sbp, all.vars)) %in% c(part_names, names(sbp)))) {
-      stop("Balances should be columns of 'data'")
-    }
-
-    nms <- setdiff(names(sbp), "")
-
-    if (length(nms) > 0) {
-      substitutions <- lapply(sbp, all.vars)
-      substitutions <- substitutions[nms]
-
-      while (!all(is.na(substitutions)) &&
-             !all(unlist(substitutions) %in% part_names)) {
-        for (nm in nms) {
-          substitutions <- lapply(substitutions, function(subs) {
-            I <- match(nm, subs)
-            if (!is.na(I)) {
-              c(subs[-I], substitutions[[nm]])
-            } else {
-              subs
-            }
-          })
-        }
-      }
-    }
-
-    sbp_split <- function(part) {
-      RIGHT <- attr(stats::terms(part), "term.labels")
-      LEFT <- setdiff(all.vars(part), RIGHT)
-
-      if (length(nms) > 0) {
-        for (nm in nms) {
-          I <- match(nm, RIGHT)
-          if (!is.na(I)) {
-            RIGHT <- c(RIGHT[-I], substitutions[[nm]])
-          }
-          I <- match(nm, LEFT)
-          if (!is.na(I)) {
-            LEFT <- c(LEFT[-I], substitutions[[nm]])
-          }
-        }
-      }
-
-      list(LEFT, RIGHT)
-    }
-
-    sbp_clean <- lapply(sbp, sbp_split)
-
-    RES <- sapply(sbp_clean, function(balance) {
-      I1 <- length(balance[[1]])
-      I2 <- length(balance[[2]])
-
-      l <- +1 / I1 * sqrt(I1 * I2 / (I1 + I2))
-      r <- -1 / I2 * sqrt(I1 * I2 / (I1 + I2))
-
-      bal <- stats::setNames(rep(0, length(part_names)), part_names)
-      bal[balance[[1]]] <- l
-      bal[balance[[2]]] <- r
-      bal
-    })
-
-    rownames(RES) <- part_names
-    colnames(RES) <- names(sbp)
+    signs <- .sbp_formula_matrix(sbp, data)
   }
-
+  if (anyNA(rownames(signs)) || any(!nzchar(rownames(signs))) ||
+      anyDuplicated(rownames(signs))) {
+    stop("Part names must be non-missing, non-empty and unique.")
+  }
+  if (anyNA(colnames(signs)) || any(!nzchar(colnames(signs))) ||
+      anyDuplicated(colnames(signs))) {
+    stop("Balance names must be non-missing, non-empty and unique.")
+  }
+  hierarchical <- FALSE
   if (fill) {
-    RES_F <- Recall(fill_sbp(sign(RES)))
-    rownames(RES_F) <- rownames(RES)
-    colnames(RES_F) <- paste0(".b", seq_len(ncol(RES_F)))
-    colnames(RES_F)[seq_len(ncol(RES))] <- colnames(RES)
-    return(RES_F)
+    if (any(colSums(signs > 0) == 0 | colSums(signs < 0) == 0)) {
+      stop("Each balance must contain at least one positive and one negative part.")
+    }
+    parts <- rownames(signs)
+    balance_names <- colnames(signs)
+    K <- ncol(signs)
+    completed <- fill_sbp(signs)
+    if (!is.null(completed)) {
+      hierarchical <- TRUE
+      signs <- completed
+      extra <- ncol(signs) - K
+      dimnames(signs) <- list(parts, make.unique(c(
+        balance_names, if (extra > 0L) paste0(".b", K + seq_len(extra))
+      )))
+    }
   }
 
-  if (!silent) {
-    if (qr(RES)$rank != (nrow(RES) - 1)) {
+  # Normalize once for both input formats, after completing the sign matrix.
+  RES <- matrix(0, nrow(signs), ncol(signs), dimnames = dimnames(signs))
+  for (j in seq_len(ncol(signs))) {
+    positive <- signs[, j] > 0
+    negative <- signs[, j] < 0
+    p <- sum(positive)
+    n <- sum(negative)
+    if (p == 0L || n == 0L) {
+      stop("Each balance must contain at least one positive and one negative part.")
+    }
+    total <- as.double(p) + n
+    RES[positive, j] <- sqrt(n / (p * total))
+    RES[negative, j] <- -sqrt(p / (n * total))
+  }
+
+  completed_rank <- NULL
+  if (fill && !hierarchical) {
+    D <- nrow(RES)
+    K <- ncol(RES)
+    # Including the constant direction makes the complement lie in the clr
+    # plane. LINPACK QR moves dependent columns behind the independent ones;
+    # its reported rank also handles duplicate and overcomplete inputs.
+    decomposition <- qr(cbind(rep(1 / sqrt(D), D), RES), tol = 1e-10)
+    extra <- D - decomposition$rank
+    completed_rank <- decomposition$rank - 1L + extra
+    if (extra > 0L) {
+      complement <- qr.Q(decomposition, complete = TRUE)[,
+        decomposition$rank + seq_len(extra), drop = FALSE]
+      original_names <- colnames(RES)
+      RES <- cbind(RES, complement)
+      colnames(RES) <- make.unique(c(original_names, paste0(".q", K + seq_len(extra))))
+    }
+  }
+
+  # Hierarchical completion guarantees an orthonormal basis. Otherwise, an
+  # identity Gram matrix proves full rank and avoids an unnecessary QR.
+  if (!silent && !hierarchical) {
+    if (ncol(RES) != nrow(RES) - 1L) {
       warning("Given partition is not a basis")
     } else {
-      Z <- t(RES) %*% RES
+      Z <- crossprod(RES)
       tol <- 1e-10
-
       off <- Z
       diag(off) <- 0
-
-      if (any(abs(off) > tol)) {
-        warning("Given basis is not orthogonal")
-      } else if (any(abs(diag(Z) - 1) > tol)) {
-        warning("Given basis is not orthonormal")
+      orthogonal <- !any(abs(off) > tol)
+      unit <- !any(abs(diag(Z) - 1) > tol)
+      if (!orthogonal || !unit) {
+        rank <- if (is.null(completed_rank)) qr(RES)$rank else completed_rank
+        if (rank != nrow(RES) - 1L) {
+          warning("Given partition is not a basis")
+        } else if (!orthogonal) {
+          warning("Given basis is not orthogonal")
+        } else {
+          warning("Given basis is not orthonormal")
+        }
       }
     }
   }
-
   RES
 }
 

@@ -7,19 +7,31 @@
 sbp_basis(sbp, data = NULL, fill = FALSE, silent = FALSE)
 }
 \arguments{
-\item{sbp}{A list of formulas or a matrix describing balances.}
+\item{sbp}{A non-empty list of formulas or a numeric matrix with finite
+entries describing balances. At least two parts are required. A matrix
+with zero columns can be supplied to construct a full basis with
+`fill = TRUE`.}
 
-\item{data}{Optional compositional data set used to extract part names when
-`sbp` is given as a list of formulas.}
+\item{data}{Optional compositional data set with column names, or a character
+vector of part names, used when `sbp` is a list of formulas. If `data = NULL`,
+part names are inferred from the formulas themselves.}
 
-\item{fill}{Logical; if `TRUE`, complete the supplied balances to obtain a
-full basis.}
+\item{fill}{Logical; if `TRUE`, complete the supplied balances to span the
+clr-plane, using hierarchical balances when compatible and an orthogonal
+complement obtained by QR otherwise.}
 
-\item{silent}{Logical; if `FALSE`, report whether the resulting balances form
-a basis, and whether they are orthogonal or orthonormal.}
+\item{silent}{Logical; if `FALSE`, warn when the result is not a basis, or
+when the basis is not orthogonal or orthonormal. Does not suppress errors
+for invalid input.}
 }
 \value{
-A matrix whose columns are balances.
+A numeric matrix whose columns are normalized balances and, when
+  needed for completion, general log-contrasts. Unnamed supplied balances
+  receive names `b1`, `b2`, etc. Added hierarchical balances have names `.b`
+  followed by their column number; QR complement columns use `.q` instead.
+  Names are made unique without changing supplied balance names. With
+  `fill = TRUE`, the matrix has `D - 1` columns for independent inputs, or
+  more columns if the supplied balances are linearly dependent.
 }
 \description{
 Construct a balance basis from a sequential binary partition (SBP) or from a
@@ -34,6 +46,30 @@ The argument `sbp` can be specified in two ways:
   entries indicate parts in the numerator, negative entries indicate parts in
   the denominator, and zeros indicate unused parts.
 }
+
+Formula groups contain part names joined by `+`, optionally enclosed in
+parentheses. Repeated parts within a group are counted once; numerator and
+denominator groups must be non-empty and disjoint. A named balance can be
+referenced in another formula to include all its parts, regardless of their
+signs. Forward references are allowed, but circular references and ambiguous
+names shared by balances and parts are rejected.
+
+With `fill = TRUE`, supplied balances are preserved in their original order.
+If they are compatible with a hierarchical SBP, the hierarchy is completed
+by adding balances. Compatibility means that each pair involves disjoint
+sets of parts, or one balance lies wholly within one group of the other.
+Otherwise, QR decomposition supplies an orthonormal basis for the orthogonal
+complement of the supplied balances within the clr-plane. These added
+columns sum to zero and are orthogonal to all supplied columns, but need not
+be balances.
+
+Completion adds `D - 1 - r` columns, where `D` is the number of parts and `r`
+is the rank of the supplied balances. The result is orthonormal if the
+supplied balances are mutually orthogonal. Non-orthogonal inputs are kept
+and produce a warning unless `silent = TRUE`. Linearly dependent inputs are
+also kept: completion then returns a redundant generating system rather than
+a basis, and warns accordingly. Without completion, an incomplete collection
+also produces a warning unless `silent = TRUE`.
 }
 \examples{
 X <- data.frame(
@@ -60,6 +96,38 @@ sbp_basis(list(
   b5 = b4 ~ f,
   b6 = b5 ~ g
 ), data = X)
+
+# Formula parts can be inferred when data is not supplied
+sbp_basis(list(
+  b1 = a ~ b,
+  b2 = b1 ~ c
+))
+
+# Complete a partial hierarchy with further balances
+B_sbp <- sbp_basis(list(ab = a ~ b), data = letters[1:4], fill = TRUE)
+B_sbp
+crossprod(B_sbp)
+
+# Orthogonal balances with crossing groups: complete by QR
+# The added .q5 column is a general log-contrast, not a balance
+B_qr <- sbp_basis(list(
+  ef = e ~ f,
+  cd = c ~ d,
+  aef = a + e + f ~ b + c + d,
+  ab = a + b ~ c + d + e + f
+), data = letters[1:6], fill = TRUE)
+round(B_qr, 3)
+crossprod(B_qr)
+
+# Non-orthogonal inputs are preserved; completion warns
+B_nonorthogonal <- sbp_basis(list(ab = a ~ b, bc = b ~ c),
+                            data = letters[1:4], fill = TRUE)
+crossprod(B_nonorthogonal)
+
+# Dependent inputs are also preserved, producing a redundant system
+B_redundant <- sbp_basis(list(ab = a ~ b, ab_again = a ~ b),
+                        data = letters[1:4], fill = TRUE)
+dim(B_redundant)
 
 # Non-orthogonal system of balances
 sbp_basis(list(

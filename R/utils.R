@@ -175,7 +175,7 @@ variation_array <- function(X, include_means = FALSE, ml_covariance = FALSE) {
 #'
 #' @param x A data matrix whose rows are compositions.
 #' @param method The distance measure to be used. This must be one of
-#'   \code{"aitchison"}, \code{"euclidean"}, \code{"maximum"},
+#'   \code{"aitchison"} (or \code{"L2"}), \code{"euclidean"}, \code{"maximum"},
 #'   \code{"manhattan"}, \code{"canberra"}, \code{"binary"}, or
 #'   \code{"minkowski"}. Any unambiguous abbreviation can be given.
 #' @param ... Additional arguments passed to \code{\link[stats]{dist}}.
@@ -199,7 +199,7 @@ variation_array <- function(X, include_means = FALSE, ml_covariance = FALSE) {
 #' @export
 dist = function(x, method = "euclidean", ...) {
   methods_available <- c(
-    "aitchison", "euclidean", "maximum",
+    "aitchison", "L2", "euclidean", "maximum",
     "manhattan", "canberra", "binary", "minkowski"
   )
 
@@ -212,11 +212,12 @@ dist = function(x, method = "euclidean", ...) {
     )
   }
 
-  is_aitchison <- (imethod == 1)
+  is_aitchison <- (imethod %in% 1:2)
 
   if (is_aitchison) {
+    method_name <- methods_available[imethod]
     warning(
-      "Use dist_coda(x, method = \"aitchison\") instead. ",
+      sprintf("Use dist_coda(x, method = \"%s\") instead. ", method_name),
       "The Aitchison extension in coda.base::dist() will be removed in a future version.",
       call. = FALSE
     )
@@ -229,7 +230,7 @@ dist = function(x, method = "euclidean", ...) {
   d <- stats::dist(x, method = method, ...)
 
   if (is_aitchison) {
-    attr(d, "method") <- "aitchison"
+    attr(d, "method") <- method_name
   }
 
   d
@@ -242,7 +243,7 @@ dist = function(x, method = "euclidean", ...) {
 #'
 #' @param x A data matrix whose rows are compositions.
 #' @param method The distance measure to be used. This must be one of
-#'   \code{"aitchison"}, \code{"L1"}, \code{"L1-pw"}, or \code{"L1-clr"}.
+#'   \code{"aitchison"} (or \code{"L2"}), \code{"L1"}, \code{"L1-pw"}, or \code{"L1-clr"}.
 #'   Any unambiguous abbreviation can be given.
 #' @param ... Additional arguments. \code{diag} and \code{upper} are passed to
 #'   \code{\link[stats]{as.dist}} for L1 distances and all arguments are passed
@@ -263,13 +264,14 @@ dist = function(x, method = "euclidean", ...) {
 #' X <- exp(matrix(rnorm(10 * 5), ncol = 5, nrow = 10))
 #'
 #' dist_coda(X, method = "aitchison")
+#' dist_coda(X, method = "L2")
 #' dist_coda(X, method = "L1")
 #' dist_coda(X, method = "L1-pw")
 #' dist_coda(X, method = "L1-clr")
 #'
 #' @export
 dist_coda <- function(x, method = "aitchison", ...) {
-  methods_available <- c("aitchison", "L1", "L1-pw", "L1-clr")
+  methods_available <- c("aitchison", "L2", "L1", "L1-pw", "L1-clr")
   imethod <- pmatch(method, methods_available)
 
   if (is.na(imethod)) {
@@ -281,9 +283,9 @@ dist_coda <- function(x, method = "aitchison", ...) {
 
   method <- methods_available[imethod]
 
-  if (method == "aitchison") {
+  if (method == "aitchison" || method == "L2") {
     d <- stats::dist(coordinates(x), method = "euclidean", ...)
-    attr(d, "method") <- "aitchison"
+    attr(d, "method") <- method
     return(d)
   }
 
@@ -433,56 +435,56 @@ fill_partition <- function(D) {
 fill_sbp <- function(iRES) {
   D <- nrow(iRES)
   K <- ncol(iRES)
-  target_K <- D - 1
+  # NULL signals a non-hierarchical collection to the QR completion path.
+  if (K > D - 1L) return(NULL)
 
-  if (K == 0) {
-    return(sign(ilr_basis(D)))
+  additions <- list()
+  component <- seq_len(D)
+  members <- as.list(seq_len(D))
+  sizes <- rep.int(1L, D)
+
+  # Each component is an already completed subtree. Merge smaller components
+  # into the largest one, adding only the balances missing between subtrees.
+  join <- function(roots, add_balance = TRUE) {
+    root <- roots[which.max(sizes[roots])]
+    for (other in roots[roots != root]) {
+      if (add_balance) {
+        additions[[length(additions) + 1L]] <<- list(members[[root]], members[[other]])
+      }
+      component[members[[other]]] <<- root
+      members[[root]] <<- c(members[[root]], members[[other]])
+      members[[other]] <<- integer()
+      sizes[root] <<- sizes[root] + sizes[other]
+      sizes[other] <<- 0L
+    }
+    root
   }
 
-  # Add one balance for completely free components
-  free_comp <- rowSums(iRES != 0) == 0
-  if (any(free_comp)) {
-    iRES <- cbind(iRES, 1 - 2 * free_comp)
-    K <- ncol(iRES)
+  # Process descendants before ancestors. A group may contain whole completed
+  # subtrees, but must never cut through one: that would be a crossing split.
+  for (j in order(colSums(iRES != 0))) {
+    positive <- which(iRES[, j] > 0)
+    negative <- which(iRES[, j] < 0)
+    positive_roots <- unique(component[positive])
+    negative_roots <- unique(component[negative])
+    if (sum(sizes[positive_roots]) != length(positive) ||
+        sum(sizes[negative_roots]) != length(negative)) {
+      return(NULL)
+    }
+    left <- join(positive_roots)
+    right <- join(negative_roots)
+    # The supplied column already connects the two groups.
+    join(c(left, right), add_balance = FALSE)
   }
-
-  # Choose root balance and, if needed, force a split of its free components
-  iROOT <- which.max(colSums(iRES != 0))
-  free_comp <- iRES[, iROOT] == 0
-  if (any(free_comp)) {
-    iRES <- cbind(iRES, 1 - 2 * free_comp)
-    iROOT <- ncol(iRES)
-    K <- ncol(iRES)
-  }
-
-  iBAL <- which(iRES[, iROOT] > 0)
-
-  BAL <- matrix(0, D, target_K)
+  # Connect disjoint trees and any parts absent from the supplied balances.
+  join(which(sizes > 0L))
+  # Allocate the completed matrix only after compatibility is established.
+  BAL <- matrix(0, D, D - 1L)
   BAL[, seq_len(K)] <- iRES
-
-  # Fill positive branch
-  pBAL <- iRES[iBAL, -iROOT, drop = FALSE]
-  pBAL <- pBAL[, colSums(pBAL != 0) > 0, drop = FALSE]
-  pDIM <- length(iBAL) - 1
-  pK <- ncol(pBAL)
-
-  if (pK < pDIM) {
-    pBAL_full <- Recall(pBAL)
-    BAL[iBAL, (K + 1):(K + pDIM - pK)] <- pBAL_full[, (pK + 1):pDIM, drop = FALSE]
+  for (i in seq_along(additions)) {
+    BAL[additions[[i]][[1]], K + i] <- 1
+    BAL[additions[[i]][[2]], K + i] <- -1
   }
-
-  # Fill negative branch
-  nBAL <- iRES[-iBAL, -iROOT, drop = FALSE]
-  nBAL <- nBAL[, colSums(nBAL != 0) > 0, drop = FALSE]
-  nDIM <- nrow(nBAL) - 1
-  nK <- ncol(nBAL)
-
-  if (nK < nDIM) {
-    nBAL_full <- Recall(nBAL)
-    BAL[-iBAL, (K + 1 + pDIM - pK):(K + pDIM + nDIM - pK)] <-
-      nBAL_full[, (nK + 1):nDIM, drop = FALSE]
-  }
-
   BAL
 }
 
